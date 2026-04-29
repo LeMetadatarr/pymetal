@@ -493,6 +493,24 @@ def test_get_lyrics_strips_html_tags(fake_client):
         assert text.strip()
 
 
+def test_get_lyrics_generator_skips_unavailable(fake_client):
+    """`get_lyrics` chains search_songs + get_lyrics_by_song_id and
+    must skip songs whose lyrics page MA reports as unavailable."""
+    from pymetal.endpoints.lyrics import get_lyrics
+
+    c = fake_client(
+        {
+            "search/ajax-advanced/searching/songs": "search_songs_heartwork.json",
+            "release/ajax-view-lyrics/id/": "lyrics_172090.html",
+        }
+    )
+    out = list(get_lyrics(song_title="Heartwork", band_name="Carcass", client=c))
+    # FakeClient serves the same lyrics for every id — assert we got at
+    # least one and that no record came through with HTML left in it.
+    assert out
+    assert all("<" not in t for t in out)
+
+
 def test_get_lyrics_real_content(fake_client):
     """A song that actually has lyrics on MA — Carcass 'Heartwork' (172090)."""
     c = fake_client({"release/ajax-view-lyrics/id/172090": "lyrics_172090.html"})

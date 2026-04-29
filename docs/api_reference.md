@@ -123,6 +123,19 @@ Fetch a band's detail page.
 `get_lineup(band_id) -> List[LineupMember]`
 Returns one row per (artist, role) per status section.
 
+`get_band_recommendations(band_id) -> List[BandRecommendation]`
+MA's "Similar artists" tab, sorted by user-vote `match_score` (descending).
+Excludes the queried band itself.
+
+`get_band_reviews(band_id) -> Iterator[Review]`
+Every user review of every release by the band. Internally overrides
+MA's broken default sort (raises `SQLSTATE[42S22]`) by sending
+`iSortCol_0=2&sSortDir_0=desc` (rating descending).
+
+`get_links(entity_id, entity_type='band') -> List[ExternalLink]`
+External links (Bandcamp, Spotify, official site, merch shops, ...)
+grouped by `section`. `entity_type` is `'band'` or `'label'`.
+
 ### Releases
 
 `get_release(release_id) -> Tuple[Release, List[Song], List[TrackAppearance]]`
@@ -133,7 +146,7 @@ The release record plus its tracklist with band attribution. For splits,
 All releases for a band (no tracks).
 
 `get_release_lineup(release_id) -> List[ReleaseLineup]`
-Per-release credits, partitioned by `CreditSection`.
+Per-release credits, partitioned by `CreditSection` (band / guest / staff).
 
 `get_other_versions(release_id) -> List[Release]`
 Re-issues, re-masters, regional editions of a release.
@@ -141,6 +154,13 @@ Re-issues, re-masters, regional editions of a release.
 ### Artists
 
 `get_artist(artist_id) -> Artist`
+Detail page including `R.I.P.` / `Died of` for deceased artists.
+
+### Labels
+
+`get_label(label_id) -> Label`
+Full label detail: address, phone, email, website, styles, founding
+date, sub-labels, parent label, online-shopping flag, logo, audit.
 
 ### Lyrics
 
@@ -149,6 +169,44 @@ Returns `None` when MA reports `(lyrics not available)`.
 
 `get_lyrics(song_title="", band_name="", release_type=None) -> Iterator[str]`
 High-level helper — searches songs, then yields their lyrics.
+
+### Browse (catalog walks)
+
+These hit MA's dedicated `browse/ajax-*` endpoints rather than the
+search index, so they return the full catalog for a slice (every band
+in a country / genre / letter) rather than paged search results.
+
+`browse_bands_by_country(code, *, paginate=True, page_size=500) -> Iterator[BandSearchHit]`
+Every band MA lists for a country (ISO 3166-1 alpha-2).
+
+`browse_bands_by_genre(slug, *, paginate=True, page_size=500) -> Iterator[BandSearchHit]`
+`slug` is one of MA's 23 coarse buckets (see `list_genre_slugs()`).
+
+`browse_bands_by_letter(letter, *, paginate=True, page_size=500) -> Iterator[BandSearchHit]`
+`letter` is `'A'`..`'Z'`, `'NBR'` (digits) or `'~'` (symbols/non-Latin).
+
+`browse_labels_by_country(code, *, paginate=True, page_size=500) -> Iterator[Label]`
+`browse_labels_by_letter(letter, *, paginate=True, page_size=500) -> Iterator[Label]`
+Lightweight `Label` rows — call `get_label(id)` for full detail.
+
+`browse_reviews(year=None, month=None, *, paginate=True, page_size=500) -> Iterator[Review]`
+All reviews posted in a given month. Defaults to the current month.
+
+`get_upcoming_releases(*, paginate=True, page_size=500) -> Iterator[UpcomingRelease]`
+Releases scheduled for the future.
+
+`get_rip_artists(*, paginate=True, page_size=500) -> Iterator[RIPArtist]`
+MA's deceased-artists list (~10k rows). Most older entries have
+unknown death info (`died_on=None`, `cause=None`).
+
+### Discovery
+
+`list_countries() -> dict[str, str]`
+Returns `{code: name}` for all 134+ country codes MA tracks (ISO
+3166-1 alpha-2 plus `'ZZ'` for Unknown), parsed from `/label/country`.
+
+`list_genre_slugs() -> list[str]`
+The 23 genre slugs accepted by `browse_bands_by_genre()`.
 
 ### Search
 

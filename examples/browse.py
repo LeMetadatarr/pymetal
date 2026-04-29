@@ -20,9 +20,10 @@ ma = MetalArchives()
 b = ma.random_band()
 print(f"random band: {b.name} ({b.country}) — {', '.join(b.genres)}")
 
-# Filter by genre — keeps re-rolling until a match is found (or 50 tries).
-heavy = ma.random_band(genre="heavy")
-print(f"random heavy band: {heavy.name} ({heavy.country})")
+# Filter by genre — keeps re-rolling until a match is found.
+# `genre` is one of MA's 23 coarse buckets (see pymetal.locators.GENRES).
+black = ma.random_band(genre="black")
+print(f"random black-metal band: {black.name} ({black.country})")
 
 
 # -- 2. Browse every band from a country -------------------------------------
@@ -71,10 +72,13 @@ for u in islice(ma.get_upcoming_releases(), 5):
 
 
 # -- 7. Deceased artists -----------------------------------------------------
-# /artist/rip — ~10k rows. Useful for memorial projects, statistics.
-print("\nfirst 5 deceased artists in MA's RIP list:")
-for r in islice(ma.get_rip_artists(), 5):
-    print(f"  {r.artist_name:<25} {r.country:<25} died {r.died_on}")
+# /artist/rip — ~10k rows. Many old entries have unknown death info (MA renders
+# 'N/A' / 'Unknown' which become None on our side); filter for ones with data.
+print("\nfirst 5 deceased artists with known death dates:")
+known = (r for r in ma.get_rip_artists() if r.died_on)
+for r in islice(known, 5):
+    cause = f" — {r.cause}" if r.cause else ""
+    print(f"  {r.artist_name:<25} {r.country or '?':<20} died {r.died_on}{cause}")
 
 
 # -- 8. Label detail ---------------------------------------------------------

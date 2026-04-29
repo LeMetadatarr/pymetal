@@ -55,26 +55,54 @@ class MetalArchives:
     def get_lineup(self, band_id: int) -> List[LineupMember]:
         return _bands.get_lineup(band_id, client=self.client)
 
-    def random_band(self, genre: Optional[str] = None) -> Band:
-        resp = self.client.get(URL_BAND_RANDOM, use_cache=False)
-        bid = ma_id_from_url(resp.url)
-        if bid is None:
-            raise RuntimeError(f"could not extract band id from random redirect {resp.url!r}")
-        band = _bands.get_band(bid, client=self.client)
-        if genre is None:
-            return band
-        target = _normalise_genre(genre)
-        if target not in GENRES:
-            return band
-        for _ in range(50):
-            band_genre = _normalise_genre(" ".join(band.genres))
-            if target in {g.strip() for g in band_genre.split("/")}:
-                return band
+    def random_band(
+        self,
+        genre: Optional[str] = None,
+        *,
+        max_attempts: int = 20,
+        sleep_between: float = 0.3,
+    ) -> Band:
+        """Roll a random band; if `genre` is given, re-roll until a match.
+
+        Re-rolls also trigger when the parser returns an empty `Band`
+        (typical when MA rate-limits and serves a stripped error page).
+        Sleeps `sleep_between` seconds between attempts so we don't
+        hammer MA.
+        """
+        import time
+
+        target = _normalise_genre(genre) if genre else None
+        if target and target not in GENRES:
+            target = None  # caller asked for an unsupported coarse genre
+
+        last_band: Optional[Band] = None
+        for attempt in range(max_attempts):
             resp = self.client.get(URL_BAND_RANDOM, use_cache=False)
             bid = ma_id_from_url(resp.url)
-            if bid is not None:
-                band = _bands.get_band(bid, client=self.client)
-        return band
+            if bid is None:
+                if sleep_between:
+                    time.sleep(sleep_between)
+                continue
+            band = _bands.get_band(bid, client=self.client)
+            if not band.name:
+                # MA likely rate-limited us — back off and retry.
+                if sleep_between:
+                    time.sleep(sleep_between)
+                continue
+            last_band = band
+            if target is None:
+                return band
+            band_genre = _normalise_genre(" ".join(band.genres))
+            if target in {g.strip() for g in band_genre.split("/") if g.strip()}:
+                return band
+            if sleep_between:
+                time.sleep(sleep_between)
+        if last_band is not None:
+            return last_band
+        raise RuntimeError(
+            f"could not get a random band after {max_attempts} attempts "
+            "(metal-archives may be rate-limiting)"
+        )
 
     # -- search -------------------------------------------------------------
 

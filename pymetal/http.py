@@ -87,7 +87,19 @@ class Client:
     def get_json(self, path: str, params: Optional[Mapping[str, Any]] = None) -> Any:
         import json
 
-        return json.loads(self.get(path, params=params).text)
+        resp = self.get(path, params=params)
+        try:
+            return json.loads(resp.text)
+        except json.JSONDecodeError as e:
+            # metal-archives sometimes returns HTML (a Cloudflare challenge,
+            # a 404 page, or a throttle response) where we expected JSON.
+            # Surface this with the URL and the first bytes so callers can
+            # tell what actually came back.
+            preview = resp.text[:120].replace("\n", " ")
+            raise RuntimeError(
+                f"expected JSON from {resp.url!r} but got non-JSON response "
+                f"(MA may be rate-limiting). First bytes: {preview!r}"
+            ) from e
 
 
 class Response:

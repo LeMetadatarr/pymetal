@@ -12,8 +12,11 @@ band = m.random_band()
 print(band.name, "-", band.country, "-", ", ".join(band.genres))
 
 # -- Random band filtered by genre -------------------------------------------
-black = m.random_band(genre="black metal")
-print("black metal pick:", black.name, black.country)
+# `genre` is one of MA's 23 coarse buckets (see pymetal.locators.GENRES).
+# Re-rolls automatically until a match is found, sleeping between attempts
+# so we don't hammer MA.
+black = m.random_band(genre="black")
+print(f"black metal pick: {black.name} ({black.country})")
 
 # -- Band detail by id (Carcass = 14) ----------------------------------------
 carcass = m.get_band(14)
@@ -21,7 +24,8 @@ print(f"\n{carcass.name} ({carcass.country}) — formed {carcass.formed_in}")
 print(f"  status: {carcass.status.value if carcass.status else None}")
 print(f"  genres: {carcass.genres}")
 print(f"  current label: {carcass.current_label_name}")
-print(f"  audited: added {carcass.audit.added_on}, last edit {carcass.audit.last_modified_on}")
+if carcass.audit:
+    print(f"  audited: added {carcass.audit.added_on}, last edit {carcass.audit.last_modified_on}")
 
 # -- Band lineup over time ---------------------------------------------------
 print("\nlineup:")
@@ -69,12 +73,19 @@ for hit in m.search_bands(country="PT", genre="Heavy", year_from=1980, year_to=1
     print(f"  {hit.ma_id:<7} {hit.name}")
 
 # -- Search albums by release type -------------------------------------------
+# Two notes:
+#   1. Pass `exact_band_match=True` — MA's default is fuzzy band matching, so
+#      "Carcass" otherwise pulls in "Carcass Grinder", "Living Carcass" etc.
+#   2. MA's albums-search response omits the year column when `band_name` is
+#      set, so `hit.release_date` is None in this query. Use `get_discography`
+#      (or `get_release` per id) when you need release dates.
 print("\nCarcass full-lengths and EPs:")
 for hit in m.search_albums(
     band_name="Carcass",
+    exact_band_match=True,
     release_type=[ReleaseType.FULL_LENGTH, ReleaseType.EP],
 ):
-    print(f"  {hit.release_date}  {hit.type.value if hit.type else '?':<11} {hit.title}")
+    print(f"  {hit.type.value if hit.type else '?':<11} {hit.title}")
 
 # -- Search songs (returns rich SongSearchHit with band_id/release_id/lyrics_id)
 print("\nsongs titled 'Heartwork' across MA:")

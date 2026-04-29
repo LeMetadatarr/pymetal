@@ -1,50 +1,78 @@
 # pymetal
 
-A Pythonic interface for [Encyclopaedia Metallum](https://www.metal-archives.com/).
+A Python client for [Encyclopaedia Metallum](https://www.metal-archives.com/) (the Metal Archives) with a relational data model that captures what flat scrapers lose: splits, lineups changing over time, and tracks reused across releases.
 
-`pymetal` provides an easy-to-use API for searching bands, albums, and lyrics from the Encyclopaedia Metallum. It is built with `curl_cffi` to ensure reliable access and handles the complexities of web scraping and TLS fingerprinting out of the box.
+Built on `curl_cffi` for TLS-fingerprint bypass and `pydantic` for typed, validated data.
 
-## Quick Start
+## Why
 
-### Installation
+Most scrapers model `Track = (id, title, band, album)`. That collapses three independent facts MA keeps separate:
+
+- a track may have **multiple bands** (split releases, collaborations);
+- a band's **lineup is time-sliced** — "the same band" on two tracks may mean different humans;
+- a track may **appear on many releases** (compilations, re-issues, singles).
+
+`pymetal` models each as a first-class entity (`TrackAppearance`, `LineupMember`, `ReleaseLineup`) keyed by metal-archives ids so re-scrapes are idempotent.
+
+## Install
 
 ```bash
-pip install curl_cffi bs4 lxml
-# Clone and install locally
-pip install -e ./pymetal
+pip install -e .
 ```
 
-### Basic Usage
+Requires Python 3.10+. Pulls `curl_cffi`, `lxml`, `pydantic>=2`, `random-user-agent`.
+
+## Quick start
 
 ```python
 from pymetal import MetalArchives
 
-m = MetalArchives()
+ma = MetalArchives()
 
-# Get a random band
-print(m.random_band())
+# Search bands with the full advanced-search filter set.
+for hit in ma.search_bands(country="PT", genre="Heavy", year_from=1980, year_to=1989):
+    print(hit.ma_id, hit.name, hit.country)
 
-# Search for lyrics
-for lyrics in m.get_lyrics(song_title="Ace of Spades", band_name="Motorhead"):
-    print(lyrics)
-    break
+# Pull a release with all its tracks (per-band attribution on splits).
+release, songs, appearances = ma.get_release(451600)  # Carcass — Heartwork
+print(release.cover_url, release.total_length, release.label_name)
+print(release.reviews_count, "reviews", release.reviews_avg_percent, "% avg")
+
+# Lineup over time — Current / Past / Live / Last-known / Guest-Session.
+for member in ma.get_lineup(14):
+    print(member.status, member.artist_name, member.role, member.date_from, member.date_to)
+
+# Lyrics by song id.
+print(ma.get_lyrics_by_song_id(172090))
 ```
+
+For larger workflows see [`examples/portuguese_heavy_metal_pre2000.py`](examples/portuguese_heavy_metal_pre2000.py) — walks every Portuguese Heavy Metal band and downloads pre-2000 lyrics with a resumable manifest.
+
+## Endpoints
+
+| Function | What it returns |
+|---|---|
+| `search_bands(...)` | `Iterator[BandSearchHit]` — every advanced filter (country, status, year range, themes, location, label) |
+| `search_albums(...)` | `Iterator[AlbumSearchHit]` — release type, format, label, catalog/barcode, year+month range |
+| `search_songs(...)` | `Iterator[SongSearchHit]` — full-text lyrics search; carries band_id / release_id / lyrics_id |
+| `get_band(id)` | `Band` — name, country, genres, themes, labels, comment, photo, audit |
+| `get_lineup(id)` | `List[LineupMember]` — partitioned by status with role-date ranges |
+| `get_release(id)` | `(Release, List[Song], List[TrackAppearance])` — splits attribute per-band |
+| `get_release_lineup(id)` | `List[ReleaseLineup]` — band / guest / staff credits |
+| `get_other_versions(id)` | `List[Release]` — re-issues, re-masters, regional editions |
+| `get_discography(id)` | `List[Release]` |
+| `get_artist(id)` | `Artist` — real name, born, R.I.P., died of, place of birth |
+| `get_lyrics_by_song_id(id)` | `Optional[str]` |
+
+All return Pydantic v2 models — `.model_dump_json()` round-trip works on every type.
 
 ## Documentation
 
-Comprehensive documentation is available in the `/docs` directory:
-
-- **[Getting Started](docs/getting_started.md)**: Installation and basic usage.
-- **[Advanced Usage](docs/advanced_usage.md)**: Advanced search parameters and custom session handling.
-- **[Developer Guide](docs/developer_guide.md)**: Architecture overview and how to contribute.
-- **[API Reference](docs/api_reference.md)**: Detailed breakdown of classes and methods.
-
-## Features
-
-- **Encyclopaedia Metallum Support**: Full access to band data, discographies, and advanced search.
-- **Modern Networking**: Uses `curl_cffi` for robust connection management.
-- **Generator Based**: Designed for memory efficiency when processing large search results.
+- [Getting Started](docs/getting_started.md) — install + first commands
+- [API Reference](docs/api_reference.md) — every public class + method
+- [Advanced Usage](docs/advanced_usage.md) — splits, lineups over time, pagination, caching, lyrics download
+- [Developer Guide](docs/developer_guide.md) — adding endpoints, capturing fixtures, running tests
 
 ## License
 
-This project is licensed under the MIT License - see the `LICENSE.md` file for details.
+Apache 2.0

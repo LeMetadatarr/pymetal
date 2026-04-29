@@ -70,6 +70,9 @@ URL_BROWSE_GENRE = "browse/ajax-genre/g/{genre}/json/1"
 URL_BROWSE_LETTER = "browse/ajax-letter/l/{letter}/json/1"
 URL_UPCOMING_RELEASES = "release/ajax-upcoming/json/1"
 URL_RIP_ARTISTS = "artist/ajax-rip/"
+URL_BROWSE_LABELS_COUNTRY = "label/ajax-list/c/{country}/json/1"
+URL_BROWSE_LABELS_LETTER = "label/ajax-list/json/1/l/{letter}"
+URL_COUNTRY_INDEX = "label/country"  # canonical list of MA country codes
 
 LYRICS_NOT_AVAILABLE = "(lyrics not available)"
 

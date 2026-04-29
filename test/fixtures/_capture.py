@@ -18,7 +18,10 @@ from pymetal.locators import (
     URL_BAND_TAB_DISCOGRAPHY,
     URL_BROWSE_COUNTRY,
     URL_BROWSE_GENRE,
+    URL_BROWSE_LABELS_COUNTRY,
+    URL_BROWSE_LABELS_LETTER,
     URL_BROWSE_LETTER,
+    URL_COUNTRY_INDEX,
     URL_LABEL,
     URL_LYRICS,
     URL_RELEASE,
@@ -73,6 +76,10 @@ def main() -> None:
         ("upcoming_releases.json", URL_UPCOMING_RELEASES, None),
         # Slim RIP fixture (full list is ~3MB; 20 rows is enough for tests).
         ("rip_artists.json", URL_RIP_ARTISTS, {"iDisplayStart": 0, "iDisplayLength": 20}),
+        # Label browse + country index
+        ("browse_labels_country_pt.json", URL_BROWSE_LABELS_COUNTRY.format(country="PT"), None),
+        ("browse_labels_letter_a.json", URL_BROWSE_LABELS_LETTER.format(letter="A"), None),
+        ("country_index.html", URL_COUNTRY_INDEX, None),
         ("lyrics_5060.html", URL_LYRICS + "5060", None),
     ]
     for fname, path, params in targets:

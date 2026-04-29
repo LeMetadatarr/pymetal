@@ -81,7 +81,26 @@ for r in islice(known, 5):
     print(f"  {r.artist_name:<25} {r.country or '?':<20} died {r.died_on}{cause}")
 
 
-# -- 8. Label detail ---------------------------------------------------------
+# -- 8. Discovery: list every valid country code / genre slug ----------------
+print("\nMA's 23-bucket genre taxonomy:")
+print(" ", ", ".join(ma.list_genre_slugs()))
+
+countries = ma.list_countries()
+print(f"\nMA tracks bands/labels in {len(countries)} country buckets")
+print(f"  PT = {countries['PT']!r}, NO = {countries['NO']!r}, ZZ = {countries['ZZ']!r}")
+
+
+# -- 9. Browse labels by country / letter ------------------------------------
+print("\nfirst 5 Portuguese labels MA lists:")
+for l in islice(ma.browse_labels_by_country("PT"), 5):
+    print(f"  {l.ma_id:<8} {l.name:<35} {l.styles or '?':<30} ({l.status})")
+
+print("\nfirst 5 labels starting with 'A':")
+for l in islice(ma.browse_labels_by_letter("A"), 5):
+    print(f"  {l.name:<30} {l.country or '?':<25} {l.status}")
+
+
+# -- 10. Label detail --------------------------------------------------------
 nb = ma.get_label(2)  # Nuclear Blast Records
 print(f"\nlabel: {nb.name}")
 print(f"  founded: {nb.founding_date} in {nb.country}")
@@ -90,7 +109,7 @@ print(f"  styles: {nb.styles}")
 print(f"  {len(nb.sub_labels)} sub-labels; first three: {nb.sub_labels[:3]}")
 
 
-# -- 9. End-to-end: every Portuguese black-metal band's releases pre-2000 ---
+# -- 11. End-to-end: every Portuguese black-metal band's releases pre-2000 --
 # Combine browse + per-band discography; demonstrates the catalog walk.
 print("\nPortuguese black-metal demos before 2000 (first 10):")
 shown = 0

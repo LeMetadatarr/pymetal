@@ -18,8 +18,12 @@ from pymetal.endpoints.browse import (
     browse_bands_by_country,
     browse_bands_by_genre,
     browse_bands_by_letter,
+    browse_labels_by_country,
+    browse_labels_by_letter,
     get_rip_artists,
     get_upcoming_releases,
+    list_countries,
+    list_genre_slugs,
 )
 from pymetal.endpoints.labels import get_label
 from pymetal.endpoints.releases import (
@@ -348,6 +352,54 @@ def test_get_rip_artists(fake_client):
     rows = list(get_rip_artists(paginate=False, client=c))
     assert rows
     assert all(r.artist_id and r.artist_name for r in rows)
+
+
+def test_browse_labels_by_country(fake_client):
+    c = fake_client({"label/ajax-list/c/PT": "browse_labels_country_pt.json"})
+    hits = list(browse_labels_by_country("PT", paginate=False, client=c))
+    assert hits
+    assert all(h.ma_id and h.name for h in hits)
+    assert all(h.country == "PT" for h in hits)
+    # Status spans render 'active' / 'on hold' / 'closed' — never empty when present
+    assert any(h.status for h in hits)
+    # `&nbsp;` and tags must be stripped from cell contents
+    for h in hits:
+        assert "&nbsp;" not in (h.styles or "")
+        assert "<" not in (h.status or "")
+
+
+def test_browse_labels_by_letter(fake_client):
+    c = fake_client({"label/ajax-list/json/1/l/A": "browse_labels_letter_a.json"})
+    hits = list(browse_labels_by_letter("A", paginate=False, client=c))
+    assert hits
+    # Letter listing carries a country column the country listing doesn't
+    assert any(h.country for h in hits)
+    # Most names start with 'A' (case-insensitive); MA's collation lets a few
+    # diacritics slip in.
+    a_starts = sum(1 for h in hits if h.name and h.name[0].upper() == "A")
+    assert a_starts / len(hits) > 0.9
+
+
+# ---------------------------------------------------------------------------
+# Discovery (country/genre indexes)
+# ---------------------------------------------------------------------------
+
+
+def test_list_countries(fake_client):
+    c = fake_client({"label/country": "country_index.html"})
+    countries = list_countries(client=c)
+    assert len(countries) > 100
+    assert countries["PT"] == "Portugal"
+    assert countries["NO"] == "Norway"
+    assert countries["US"] == "United States"
+    assert countries["ZZ"] == "Unknown"  # MA's bucket for unspecified
+
+
+def test_list_genre_slugs():
+    slugs = list_genre_slugs()
+    assert len(slugs) == 23
+    for canonical in ("black", "death", "doom", "heavy", "thrash", "grindcore"):
+        assert canonical in slugs
 
 
 # ---------------------------------------------------------------------------

@@ -16,13 +16,17 @@ from pymetal.endpoints._common import ma_id_from_url
 from pymetal.endpoints.releases import _coerce_release_type
 from pymetal.http import Client, default_client
 from pymetal.locators import (
+    GENRES,
     URL_BROWSE_COUNTRY,
     URL_BROWSE_GENRE,
+    URL_BROWSE_LABELS_COUNTRY,
+    URL_BROWSE_LABELS_LETTER,
     URL_BROWSE_LETTER,
+    URL_COUNTRY_INDEX,
     URL_RIP_ARTISTS,
     URL_UPCOMING_RELEASES,
 )
-from pymetal.models import BandSearchHit, BandStatus, RIPArtist, UpcomingRelease
+from pymetal.models import BandSearchHit, BandStatus, Label, RIPArtist, UpcomingRelease
 
 
 _HREF_RE = re.compile(r"href=['\"]([^'\"]+)['\"]")
@@ -39,7 +43,20 @@ def _parse_anchor(html_str: str) -> tuple[Optional[str], str]:
 
 
 def _strip_tags(s: str) -> str:
-    return re.sub(r"<[^>]+>", "", s).strip()
+    """Remove HTML tags + decode the few entities MA emits in table cells."""
+    if not s:
+        return ""
+    cleaned = re.sub(r"<[^>]+>", "", s)
+    # MA pads cells with literal `&nbsp;` and the unicode NBSP \xa0 — strip both.
+    cleaned = cleaned.replace("&nbsp;", " ").replace("\xa0", " ").replace("&amp;", "&")
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _clean_or_none(s: Optional[str]) -> Optional[str]:
+    if s is None:
+        return None
+    out = _strip_tags(s)
+    return out or None
 
 
 def _walk(
@@ -193,6 +210,116 @@ def get_rip_artists(
             died_on=died if died and died != "N/A" else None,
             cause=cause if cause and cause != "Unknown" else None,
         )
+
+
+def _label_status_from_span(html_str: str) -> Optional[str]:
+    """'<span class="active">active</span>&nbsp;' -> 'active'."""
+    return _clean_or_none(html_str)
+
+
+def _website_from_anchor(html_str: str) -> Optional[str]:
+    m = _HREF_RE.search(html_str or "")
+    return m.group(1) if m else None
+
+
+def browse_labels_by_country(
+    country_code: str,
+    *,
+    paginate: bool = True,
+    page_size: int = 500,
+    client: Optional[Client] = None,
+) -> Iterator[Label]:
+    """Every label MA lists for a country (e.g. 338 PT labels).
+
+    Walks `label/ajax-list/c/{code}/json/1`. Returns lightweight `Label`
+    rows — call `get_label(label.ma_id)` for full detail (address,
+    sub-labels, audit, etc.).
+    """
+    c = client or default_client
+    for row in _walk(
+        c,
+        URL_BROWSE_LABELS_COUNTRY.format(country=country_code),
+        page_size=page_size,
+        paginate=paginate,
+    ):
+        # cols: [edit_link, label_anchor, specialty, status_span, website, online_shopping]
+        href, name = _parse_anchor(row[1]) if len(row) > 1 else (None, "")
+        yield Label(
+            ma_id=ma_id_from_url(href),
+            name=name,
+            url=href or None,
+            country=country_code,
+            styles=_clean_or_none(row[2]) if len(row) > 2 else None,
+            status=_label_status_from_span(row[3]) if len(row) > 3 else None,
+            website=_website_from_anchor(row[4]) if len(row) > 4 else None,
+            online_shopping="Yes" if len(row) > 5 and "Yes" in row[5] else None,
+        )
+
+
+def browse_labels_by_letter(
+    letter: str,
+    *,
+    paginate: bool = True,
+    page_size: int = 500,
+    client: Optional[Client] = None,
+) -> Iterator[Label]:
+    """Every label whose name starts with `letter` ('A'..'Z', 'NBR', '~').
+
+    Same shape as `browse_labels_by_country`; the row layout adds a
+    country column at index 4.
+    """
+    c = client or default_client
+    for row in _walk(
+        c,
+        URL_BROWSE_LABELS_LETTER.format(letter=letter),
+        page_size=page_size,
+        paginate=paginate,
+    ):
+        # cols: [edit_link, label_anchor, specialty, status_span, country, website, online_shopping]
+        href, name = _parse_anchor(row[1]) if len(row) > 1 else (None, "")
+        yield Label(
+            ma_id=ma_id_from_url(href),
+            name=name,
+            url=href or None,
+            country=_clean_or_none(row[4]) if len(row) > 4 else None,
+            styles=_clean_or_none(row[2]) if len(row) > 2 else None,
+            status=_label_status_from_span(row[3]) if len(row) > 3 else None,
+            website=_website_from_anchor(row[5]) if len(row) > 5 else None,
+            online_shopping="Yes" if len(row) > 6 and "Yes" in row[6] else None,
+        )
+
+
+def list_countries(client: Optional[Client] = None) -> dict[str, str]:
+    """Return MA's full country index as `{code: name}`.
+
+    Parsed from `/label/country`. Codes are ISO 3166-1 alpha-2 plus
+    `ZZ` ("Unknown") and `0` ("(no country)") which MA uses as buckets.
+    """
+    from lxml import html as lxml_html
+
+    c = client or default_client
+    resp = c.get(URL_COUNTRY_INDEX)
+    tree = lxml_html.fromstring(resp.content)
+    out: dict[str, str] = {}
+    for a in tree.xpath('//a[contains(@href,"/c/")]'):
+        href = a.get("href", "")
+        idx = href.rfind("/c/")
+        if idx < 0:
+            continue
+        code = href[idx + 3 :].rstrip("/")
+        name = (a.text_content() or "").strip()
+        if code and name and code not in out:
+            out[code] = name
+    return out
+
+
+def list_genre_slugs() -> list[str]:
+    """Return MA's coarse 23-bucket genre taxonomy.
+
+    These are the slugs accepted by `browse_bands_by_genre(slug)` — they
+    are *not* the free-text genre strings on band pages.
+    """
+    return list(GENRES)
 
 
 def get_upcoming_releases(

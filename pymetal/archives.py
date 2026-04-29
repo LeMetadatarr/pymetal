@@ -171,6 +171,25 @@ class MetalArchives:
         kw.setdefault("client", self.client)
         return get_rip_artists(**kw)
 
+    def browse_labels_by_country(self, country_code: str, **kw):
+        from pymetal.endpoints.browse import browse_labels_by_country
+        kw.setdefault("client", self.client)
+        return browse_labels_by_country(country_code, **kw)
+
+    def browse_labels_by_letter(self, letter: str, **kw):
+        from pymetal.endpoints.browse import browse_labels_by_letter
+        kw.setdefault("client", self.client)
+        return browse_labels_by_letter(letter, **kw)
+
+    def list_countries(self):
+        from pymetal.endpoints.browse import list_countries
+        return list_countries(client=self.client)
+
+    @staticmethod
+    def list_genre_slugs():
+        from pymetal.endpoints.browse import list_genre_slugs
+        return list_genre_slugs()
+
     # -- lyrics -------------------------------------------------------------
 
     def get_lyrics_by_song_id(self, song_id: Union[int, str]) -> Optional[str]:

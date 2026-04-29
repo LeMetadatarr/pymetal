@@ -143,6 +143,12 @@ def test_get_release_heartwork(fake_client):
     assert apps[0].track_no == 1
     # No split — title_override should not be set
     assert all(a.title_override is None for a in apps)
+    # Regression: song.lyrics_id is the real MA song id (preserves
+    # alphanumeric ids on older releases — e.g. Iron Maiden tracks use
+    # '589A' tags). For Carcass (modern numeric) lyrics_id == str(ma_id).
+    assert songs[0].lyrics_id == "340" and songs[0].ma_id == 340
+    assert songs[3].lyrics_id == "343" and songs[3].ma_id == 343  # 'Heartwork' track 4
+    assert all(s.lyrics_id for s in songs)
 
 
 # ---------------------------------------------------------------------------

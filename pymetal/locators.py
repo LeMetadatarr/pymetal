@@ -83,7 +83,7 @@ URL_BAND_REVIEWS = "review/ajax-list-band/id/{band_id}/json/1"
 LYRICS_NOT_AVAILABLE = "(lyrics not available)"
 
 # Regexes
-RE_LYRIC_ID = re.compile(r"id=.+[a-z]+.(?P<id>\d+)")
+RE_LYRIC_ID = re.compile(r"id=.+[a-z]+.(?P<id>[\w]+)")
 RE_BAND_NAME = re.compile(r'title="(?P<name>.*)\"')
 RE_TAGS = re.compile(r"<[^>]+>")
 RE_TRAILING_ID = re.compile(r"/(?P<id>\d+)/?$")

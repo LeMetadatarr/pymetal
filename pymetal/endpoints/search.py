@@ -320,13 +320,13 @@ def search_songs(
         except ValueError:
             rtype = None
         song_title_text = row[3] if len(row) > 3 else ""
-        lyrics_id = None
+        lyrics_id: Optional[str] = None
         if len(row) > 4 and row[4]:
             m = RE_LYRIC_ID.search(row[4])
             if m:
-                lyrics_id = int(m.group("id"))
+                lyrics_id = m.group("id")
         yield SongSearchHit(
-            song_id=lyrics_id or 0,
+            song_id=lyrics_id or "",
             title=song_title_text,
             band_id=ma_id_from_url(band_url),
             band_name=band_name_text,

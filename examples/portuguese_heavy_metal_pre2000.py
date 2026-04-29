@@ -1,22 +1,34 @@
-"""Download lyrics for every Heavy Metal song from Portugal released before 2000.
+"""Download lyrics for every Portuguese metal song released before 2000.
 
 Walks:
-    advanced band search (country=PT, genre=Heavy)
-        -> discography per band
-            -> tracklist per pre-2000 release
-                -> lyrics per track
+    /browse/country/c/PT (every band MA tracks for Portugal — 1800+ rows)
+      -> filter to bands matching `--genre` substring on the free-text genre
+      -> discography per band
+        -> tracklist per pre-`--year` release (excluding demo / video / boxed-set)
+          -> lyrics per track
 
-Lyrics are written to:
+Why /browse/country and not /search/bands?
+    The advanced-search index is sparse (only 157 PT bands surface for
+    'Heavy'). The browse endpoint returns the *full* country catalog
+    (1835 PT bands) and gives us the free-text MA genre per band so we
+    can match more loosely — "Heavy/Power Metal", "Doom/Heavy Metal",
+    "Heavy Metal" all match `--genre Heavy`.
+
+Why pre-2000?
+    Older full-lengths and EPs are well-covered on MA (lyrics submitted
+    over decades). Demos rarely have lyrics — we skip them by default.
+
+Output:
     out/<band_slug>/<year>_<release_slug>/<NN>_<song_slug>.txt
 
-A small `manifest.jsonl` records every (band, release, song) triple so a
-re-run can resume cheaply — metal-archives is rate-limited and we don't
-want to hammer it.
+`manifest.jsonl` records every (band, release, song) triple so a re-run
+resumes cheaply — MA is rate-limited and we don't want to hammer it.
 
 Run:
     python examples/portuguese_heavy_metal_pre2000.py
     python examples/portuguese_heavy_metal_pre2000.py --limit-bands 3   # smoke test
-    python examples/portuguese_heavy_metal_pre2000.py --year 2010       # different cutoff
+    python examples/portuguese_heavy_metal_pre2000.py --country US --genre thrash --year 1995
+    python examples/portuguese_heavy_metal_pre2000.py --include-demos
 """
 from __future__ import annotations
 
@@ -29,19 +41,25 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from pymetal import MetalArchives
-from pymetal.endpoints.bands import get_band
+from pymetal.endpoints.browse import browse_bands_by_country
 from pymetal.endpoints.lyrics import get_lyrics_by_song_id
 from pymetal.endpoints.releases import get_discography, get_release
-from pymetal.endpoints.search import search_bands
 from pymetal.models import Release, ReleaseType
 
 
 COUNTRY = "PT"
-GENRE = "Heavy"
+GENRE = "Heavy"  # substring matched against MA's free-text genre per band
 DEFAULT_YEAR = 2000
 
-# Releases without lyrics worth scraping — skip outright.
-SKIP_RELEASE_TYPES = {ReleaseType.VIDEO, ReleaseType.BOXED_SET, ReleaseType.SPLIT_VIDEO}
+# Demos almost never have lyrics on MA; skip by default. Video/boxed-set are
+# never lyric-bearing.
+SKIP_RELEASE_TYPES_DEFAULT = {
+    ReleaseType.VIDEO,
+    ReleaseType.BOXED_SET,
+    ReleaseType.SPLIT_VIDEO,
+    ReleaseType.DEMO,
+}
+SKIP_RELEASE_TYPES_INCLUDE_DEMOS = SKIP_RELEASE_TYPES_DEFAULT - {ReleaseType.DEMO}
 
 
 def slugify(s: str) -> str:
@@ -59,9 +77,14 @@ def release_year(rel: Release) -> Optional[int]:
     return int(m.group(1)) if m else None
 
 
-def iter_pre_year_releases(band_id: int, year_cutoff: int, ma: MetalArchives) -> Iterable[Release]:
+def iter_pre_year_releases(
+    band_id: int,
+    year_cutoff: int,
+    ma: MetalArchives,
+    skip_types: set,
+) -> Iterable[Release]:
     for rel in get_discography(band_id, client=ma.client):
-        if rel.type in SKIP_RELEASE_TYPES:
+        if rel.type in skip_types:
             continue
         y = release_year(rel)
         if y is not None and y < year_cutoff:
@@ -73,19 +96,31 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=Path("out"), help="output directory")
     ap.add_argument("--year", type=int, default=DEFAULT_YEAR, help="release-year cutoff (exclusive)")
     ap.add_argument("--country", default=COUNTRY, help="MA country code (e.g. PT, NO, US)")
-    ap.add_argument("--genre", default=GENRE, help="MA genre keyword (e.g. Heavy, Death, Doom)")
+    ap.add_argument(
+        "--genre",
+        default=GENRE,
+        help="substring matched against MA's free-text band genre (e.g. Heavy, Death, Doom)",
+    )
     ap.add_argument("--limit-bands", type=int, default=0, help="stop after N bands (0 = no limit)")
     ap.add_argument("--sleep", type=float, default=0.5, help="pause between requests (be kind to MA)")
+    ap.add_argument(
+        "--include-demos",
+        action="store_true",
+        help="include demo releases (default skips them — they rarely have lyrics)",
+    )
     args = ap.parse_args()
+    skip_types = (
+        SKIP_RELEASE_TYPES_INCLUDE_DEMOS if args.include_demos else SKIP_RELEASE_TYPES_DEFAULT
+    )
 
     args.out.mkdir(parents=True, exist_ok=True)
     manifest_path = args.out / "manifest.jsonl"
-    seen: set[tuple[int, int]] = set()  # (release_id, song_id)
+    seen: set[tuple[int, str]] = set()  # (release_id, song_id) — song_id is MA's str id
     if manifest_path.exists():
         for line in manifest_path.read_text().splitlines():
             try:
                 rec = json.loads(line)
-                seen.add((rec["release_id"], rec["song_id"]))
+                seen.add((rec["release_id"], str(rec["song_id"])))
             except (json.JSONDecodeError, KeyError):
                 continue
         print(f"resume: {len(seen)} (release, song) pairs already done", file=sys.stderr)
@@ -94,27 +129,24 @@ def main() -> int:
     manifest = manifest_path.open("a", encoding="utf-8")
 
     n_bands = n_releases = n_tracks = n_lyrics = 0
+    genre_needle = args.genre.lower()
     try:
-        for band in search_bands(
-            country=args.country, genre=args.genre, paginate=True, client=ma.client
-        ):
+        for band in browse_bands_by_country(args.country, client=ma.client):
             if not band.ma_id:
+                continue
+            # Match the substring against the free-text MA genre. Hits a much
+            # broader set than search_bands(genre=...) which only matches MA's
+            # 23-bucket coarse taxonomy.
+            if genre_needle and genre_needle not in (band.genre or "").lower():
                 continue
             n_bands += 1
             if args.limit_bands and n_bands > args.limit_bands:
                 break
 
-            # Need full band record (location, formed_in) for the manifest.
-            try:
-                full = get_band(band.ma_id, client=ma.client)
-            except Exception as e:  # noqa: BLE001
-                print(f"  ! band {band.name!r}: {e!r}", file=sys.stderr)
-                continue
+            band_slug = slugify(band.name)
+            print(f"[{n_bands:3d}] {band.name}  ({band.genre})")
 
-            band_slug = slugify(full.name)
-            print(f"[{n_bands:3d}] {full.name} ({full.location or full.country})")
-
-            for rel in iter_pre_year_releases(full.ma_id, args.year, ma):
+            for rel in iter_pre_year_releases(band.ma_id, args.year, ma, skip_types):
                 n_releases += 1
                 year = release_year(rel) or 0
                 rel_slug = f"{year}_{slugify(rel.title)}"
@@ -128,10 +160,12 @@ def main() -> int:
 
                 for song, app in zip(songs, apps):
                     n_tracks += 1
-                    key = (rel.ma_id, song.ma_id)
+                    if not song.lyrics_id:
+                        continue
+                    key = (rel.ma_id, song.lyrics_id)
                     if key in seen:
                         continue
-                    text = get_lyrics_by_song_id(song.ma_id, client=ma.client)
+                    text = get_lyrics_by_song_id(song.lyrics_id, client=ma.client)
                     time.sleep(args.sleep)
                     if not text:
                         continue
@@ -142,13 +176,13 @@ def main() -> int:
                     manifest.write(
                         json.dumps(
                             {
-                                "band_id": full.ma_id,
-                                "band_name": full.name,
+                                "band_id": band.ma_id,
+                                "band_name": band.name,
                                 "release_id": rel.ma_id,
                                 "release_title": rel.title,
                                 "release_year": year,
                                 "release_type": rel.type.value,
-                                "song_id": song.ma_id,
+                                "song_id": song.lyrics_id,
                                 "song_title": song.title,
                                 "track_no": app.track_no,
                                 "path": str((rel_dir / fname).relative_to(args.out)),

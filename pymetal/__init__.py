@@ -1,5 +1,6 @@
 from pymetal.archives import MetalArchives
 from pymetal.http import Client
+from pymetal.version import __version__
 from pymetal.models import (
     AlbumSearchHit,
     Artist,

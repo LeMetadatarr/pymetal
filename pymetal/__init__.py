@@ -15,9 +15,11 @@ from pymetal.models import (
     ReleaseFormat,
     ReleaseLineup,
     ReleaseType,
+    RIPArtist,
     Song,
     SongSearchHit,
     TrackAppearance,
+    UpcomingRelease,
 )
 
 __all__ = [
@@ -37,7 +39,9 @@ __all__ = [
     "ReleaseFormat",
     "ReleaseLineup",
     "ReleaseType",
+    "RIPArtist",
     "Song",
     "SongSearchHit",
     "TrackAppearance",
+    "UpcomingRelease",
 ]

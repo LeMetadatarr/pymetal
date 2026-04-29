@@ -62,6 +62,14 @@ URL_RELEASE = "albums/_/_/{release_id}"
 URL_BAND = "bands/_/{band_id}"
 URL_ARTIST = "artists/_/{artist_id}"
 URL_RELEASE_VERSIONS = "release/ajax-versions/current/{release_id}/parent/{release_id}"
+URL_LABEL = "labels/_/{label_id}"
+
+# Browse endpoints — alphabetical / country / genre listings (full, not paged search).
+URL_BROWSE_COUNTRY = "browse/ajax-country/c/{country}/json/1"
+URL_BROWSE_GENRE = "browse/ajax-genre/g/{genre}/json/1"
+URL_BROWSE_LETTER = "browse/ajax-letter/l/{letter}/json/1"
+URL_UPCOMING_RELEASES = "release/ajax-upcoming/json/1"
+URL_RIP_ARTISTS = "artist/ajax-rip/"
 
 LYRICS_NOT_AVAILABLE = "(lyrics not available)"
 

@@ -110,6 +110,39 @@ class MetalArchives:
         from pymetal.endpoints.artists import get_artist
         return get_artist(artist_id, client=self.client)
 
+    # -- label --------------------------------------------------------------
+
+    def get_label(self, label_id: int):
+        from pymetal.endpoints.labels import get_label
+        return get_label(label_id, client=self.client)
+
+    # -- browse -------------------------------------------------------------
+
+    def browse_bands_by_country(self, country_code: str, **kw):
+        from pymetal.endpoints.browse import browse_bands_by_country
+        kw.setdefault("client", self.client)
+        return browse_bands_by_country(country_code, **kw)
+
+    def browse_bands_by_genre(self, genre_slug: str, **kw):
+        from pymetal.endpoints.browse import browse_bands_by_genre
+        kw.setdefault("client", self.client)
+        return browse_bands_by_genre(genre_slug, **kw)
+
+    def browse_bands_by_letter(self, letter: str, **kw):
+        from pymetal.endpoints.browse import browse_bands_by_letter
+        kw.setdefault("client", self.client)
+        return browse_bands_by_letter(letter, **kw)
+
+    def get_upcoming_releases(self, **kw):
+        from pymetal.endpoints.browse import get_upcoming_releases
+        kw.setdefault("client", self.client)
+        return get_upcoming_releases(**kw)
+
+    def get_rip_artists(self, **kw):
+        from pymetal.endpoints.browse import get_rip_artists
+        kw.setdefault("client", self.client)
+        return get_rip_artists(**kw)
+
     # -- lyrics -------------------------------------------------------------
 
     def get_lyrics_by_song_id(self, song_id: Union[int, str]) -> Optional[str]:

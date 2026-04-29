@@ -14,6 +14,14 @@ from collections import Counter
 
 from pymetal.endpoints.artists import get_artist
 from pymetal.endpoints.bands import get_band, get_lineup
+from pymetal.endpoints.browse import (
+    browse_bands_by_country,
+    browse_bands_by_genre,
+    browse_bands_by_letter,
+    get_rip_artists,
+    get_upcoming_releases,
+)
+from pymetal.endpoints.labels import get_label
 from pymetal.endpoints.releases import (
     get_discography,
     get_other_versions,
@@ -292,6 +300,71 @@ def test_get_other_versions_heartwork(fake_client):
     # Multiple formats represented
     fmts = {v.format for v in versions if v.format is not None}
     assert len(fmts) > 1
+
+
+# ---------------------------------------------------------------------------
+# Browse endpoints (full catalog slices, not paged search)
+# ---------------------------------------------------------------------------
+
+
+def test_browse_bands_by_country(fake_client):
+    c = fake_client({"browse/ajax-country": "browse_country_pt.json"})
+    hits = list(browse_bands_by_country("PT", paginate=False, client=c))
+    assert hits
+    assert all(h.country == "PT" for h in hits)
+    assert all(h.ma_id and h.name for h in hits)
+
+
+def test_browse_bands_by_genre(fake_client):
+    c = fake_client({"browse/ajax-genre": "browse_genre_black.json"})
+    hits = list(browse_bands_by_genre("black", paginate=False, client=c))
+    assert hits
+    assert all(h.ma_id and h.name for h in hits)
+    # Country column populated; genre column carries free-text MA genre
+    assert any(h.country for h in hits)
+
+
+def test_browse_bands_by_letter(fake_client):
+    c = fake_client({"browse/ajax-letter": "browse_letter_a.json"})
+    hits = list(browse_bands_by_letter("A", paginate=False, client=c))
+    assert hits
+    # The vast majority of names start with 'A' (a few diacritics like 'À'
+    # also surface here per MA's collation).
+    a_starts = sum(1 for h in hits if h.name and h.name[0].upper() == "A")
+    assert a_starts / len(hits) > 0.9
+
+
+def test_get_upcoming_releases(fake_client):
+    c = fake_client({"release/ajax-upcoming": "upcoming_releases.json"})
+    rows = list(get_upcoming_releases(paginate=False, client=c))
+    assert rows
+    sample = rows[0]
+    assert sample.band_id and sample.release_id
+    assert sample.release_date
+
+
+def test_get_rip_artists(fake_client):
+    c = fake_client({"artist/ajax-rip": "rip_artists.json"})
+    rows = list(get_rip_artists(paginate=False, client=c))
+    assert rows
+    assert all(r.artist_id and r.artist_name for r in rows)
+
+
+# ---------------------------------------------------------------------------
+# Label detail
+# ---------------------------------------------------------------------------
+
+
+def test_get_label_nuclear_blast(fake_client):
+    c = fake_client({"labels/_/2": "label_nuclear_blast.html"})
+    lab = get_label(2, client=c)
+    assert lab.name == "Nuclear Blast Records"
+    assert lab.country == "Germany"
+    assert lab.founding_date == "1987"
+    assert lab.status  # "active"
+    assert lab.styles  # styles/specialties text
+    assert lab.sub_labels  # large parent label has many sub-labels
+    assert lab.audit is not None
 
 
 def test_get_lyrics_strips_html_tags(fake_client):

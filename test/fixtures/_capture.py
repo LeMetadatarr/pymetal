@@ -16,12 +16,18 @@ from pymetal.locators import (
     URL_ARTIST,
     URL_BAND,
     URL_BAND_TAB_DISCOGRAPHY,
+    URL_BROWSE_COUNTRY,
+    URL_BROWSE_GENRE,
+    URL_BROWSE_LETTER,
+    URL_LABEL,
     URL_LYRICS,
     URL_RELEASE,
     URL_RELEASE_VERSIONS,
+    URL_RIP_ARTISTS,
     URL_SEARCH_ALBUMS,
     URL_SEARCH_BANDS,
     URL_SEARCH_SONGS,
+    URL_UPCOMING_RELEASES,
 )
 
 
@@ -59,6 +65,14 @@ def main() -> None:
             URL_RELEASE_VERSIONS.format(release_id=451600),
             None,
         ),
+        # Browse + label + meta endpoints
+        ("browse_country_pt.json", URL_BROWSE_COUNTRY.format(country="PT"), None),
+        ("browse_genre_black.json", URL_BROWSE_GENRE.format(genre="black"), None),
+        ("browse_letter_a.json", URL_BROWSE_LETTER.format(letter="A"), None),
+        ("label_nuclear_blast.html", URL_LABEL.format(label_id=2), None),
+        ("upcoming_releases.json", URL_UPCOMING_RELEASES, None),
+        # Slim RIP fixture (full list is ~3MB; 20 rows is enough for tests).
+        ("rip_artists.json", URL_RIP_ARTISTS, {"iDisplayStart": 0, "iDisplayLength": 20}),
         ("lyrics_5060.html", URL_LYRICS + "5060", None),
     ]
     for fname, path, params in targets:

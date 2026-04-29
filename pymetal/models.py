@@ -91,6 +91,42 @@ class Label(BaseModel):
     url: Optional[HttpUrl] = None
     country: Optional[str] = None
     status: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[HttpUrl] = None
+    styles: Optional[str] = None
+    founding_date: Optional[str] = None
+    sub_labels: List[str] = Field(default_factory=list)
+    parent_label_id: Optional[int] = None
+    parent_label_name: Optional[str] = None
+    online_shopping: Optional[str] = None
+    logo_url: Optional[HttpUrl] = None
+    audit: Optional[Audit] = None
+
+
+class UpcomingRelease(BaseModel):
+    """A release in MA's upcoming-albums list."""
+
+    band_id: Optional[int] = None
+    band_name: str
+    release_id: Optional[int] = None
+    release_title: str
+    type: Optional[ReleaseType] = None
+    genre: Optional[str] = None
+    release_date: Optional[str] = None  # human-readable, e.g. "April 29th, 2026"
+
+
+class RIPArtist(BaseModel):
+    """A row in MA's deceased-artists list (`/artist/rip`)."""
+
+    artist_id: Optional[int] = None
+    artist_name: str
+    country: Optional[str] = None
+    band_id: Optional[int] = None
+    band_name: Optional[str] = None
+    died_on: Optional[str] = None
+    cause: Optional[str] = None
 
 
 class Band(BaseModel):

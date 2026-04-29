@@ -229,9 +229,8 @@ class Song(BaseModel):
     ma_id: Optional[int] = None
     title: str
     length: Optional[str] = None  # MM:SS as MA renders it
-    # The id used by /release/ajax-view-lyrics. MA emits these as strings:
-    # most are pure digits ('340'), but older releases use alphanumeric
-    # tags ('589A'). Always pass `.lyrics_id` to `get_lyrics_by_song_id()`.
+    # The id used by /release/ajax-view-lyrics. Alphanumeric ('340', '589A').
+    # Always pass `.lyrics_id` to `get_lyrics_by_song_id()`.
     lyrics_id: Optional[str] = None
 
 
@@ -319,11 +318,11 @@ class AlbumSearchHit(BaseModel):
 
 
 class SongSearchHit(BaseModel):
-    song_id: str  # MA's song id (mostly numeric, occasionally alphanumeric)
+    song_id: str  # alphanumeric MA song id
     title: str
     band_id: Optional[int] = None
     band_name: Optional[str] = None
     release_id: Optional[int] = None
     release_title: Optional[str] = None
     release_type: Optional[ReleaseType] = None
-    lyrics_id: Optional[str] = None  # alias of song_id for the lyrics endpoint
+    lyrics_id: Optional[str] = None

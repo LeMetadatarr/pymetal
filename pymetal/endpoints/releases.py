@@ -170,10 +170,6 @@ def get_release(
         no_text = (first(tr.xpath(XPATHS.track_no)) or "").rstrip(".").strip()
         title_text_raw = "".join(tr.xpath(XPATHS.track_title)).strip()
         length = first(tr.xpath(XPATHS.track_length))
-        # The song id is exposed in three redundant places on each track
-        # row: <td><a name="<id>">, <a id="lyricsButton<id>">, and the
-        # onclick toggleLyrics('<id>'). The td[1] anchor `name` is the
-        # cleanest source.
         song_anchor_name = first(tr.xpath('./td[1]/a[@name]/@name'))
 
         try:
@@ -191,16 +187,10 @@ def get_release(
                 title_override = stripped
                 band_id_for_track = split_bands.get(band_name.lower())
 
-        # The anchor name carries the MA song id used by the lyrics endpoint.
-        # It's mostly numeric ('340') but older releases use alphanumeric
-        # tags ('589A'). Preserve the string for the lyrics endpoint;
-        # populate Song.ma_id only when purely numeric.
         lyrics_id_str: Optional[str] = song_anchor_name or None
         song_ma_id: Optional[int] = (
             int(lyrics_id_str) if lyrics_id_str and lyrics_id_str.isdigit() else None
         )
-        # TrackAppearance.song_id (int) needs a stable per-release-track value
-        # — use ma_id when available, else a synthetic id so joins still work.
         song_id_for_join: int = song_ma_id if song_ma_id is not None else release_id * 1000 + track_no
 
         is_instrumental = "(instrumental)" in clean_title.lower()

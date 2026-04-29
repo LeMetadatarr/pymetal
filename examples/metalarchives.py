@@ -1,154 +1,95 @@
-from pymetal import MetalArchives
+"""End-to-end tour of the pymetal API.
+
+Run: python examples/metalarchives.py
+"""
+from pymetal import CreditSection, MetalArchives, ReleaseType
+
 
 m = MetalArchives()
-print(m.random_band())
-# output:
-#  {'genre': 'Melodic Power Metal',
-# 'name': 'Divinus',
-# 'url': 'https://www.metal-archives.com/bands/Divinus/12982',
-# 'country': 'Germany',
-# 'label': 'Unsigned/independent',
-# 'date': '1992',
-# 'theme': None,
-# 'location': 'Kaiserslautern, Rhineland-Palatinate',
-# 'status': 'Active',
-# 'years': ['1992-present']}
 
-print(m.get_band_data("https://www.metal-archives.com/bands/Burzum/88"))
+# -- Random band --------------------------------------------------------------
+band = m.random_band()
+print(band.name, "-", band.country, "-", ", ".join(band.genres))
 
-# output:
-# {'genre': 'Black Metal, Ambient',
-# 'name': 'Burzum',
-# 'url': 'https://www.metal-archives.com/bands/Burzum/88',
-# 'country': 'Norway',
-# 'label': None,
-# 'date': '1991',
-# 'theme': ['Myths', ' Folklore', ' Odalism', ' Darkness', ' Philosophy'],
-# 'location': u'Bergen (early), B\xf8 (mid), Limousin, France (later)',
-# 'status': 'Active',
-# 'years': ['1991-2000', '2009-present']}
+# -- Random band filtered by genre -------------------------------------------
+black = m.random_band(genre="black metal")
+print("black metal pick:", black.name, black.country)
 
-# generator, not a list
-for band in m.search_band("metallica"):
-    print(band)
-    # output:
-    # {'url': u'"https://www.metal-archives.com/bands/Metallica/125',
-    # 'genre': u'Thrash Metal (early), Hard Rock/Heavy/Thrash Metal (later)',
-    # 'name': u'Metallica',
-    # 'country': u'United States'}
+# -- Band detail by id (Carcass = 14) ----------------------------------------
+carcass = m.get_band(14)
+print(f"\n{carcass.name} ({carcass.country}) — formed {carcass.formed_in}")
+print(f"  status: {carcass.status.value if carcass.status else None}")
+print(f"  genres: {carcass.genres}")
+print(f"  current label: {carcass.current_label_name}")
+print(f"  audited: added {carcass.audit.added_on}, last edit {carcass.audit.last_modified_on}")
 
-# generator, not a list
-for song in m.search_song("black metal ist krieg"):
-    print(song)
+# -- Band lineup over time ---------------------------------------------------
+print("\nlineup:")
+for member in m.get_lineup(14)[:6]:
+    span = f"{member.date_from or '?'}–{member.date_to or 'present'}"
+    print(f"  [{member.status.value:>14}] {member.artist_name:<20} {span}  {member.role}")
+
+# -- Discography -------------------------------------------------------------
+disco = m.get_discography(14)
+print(f"\ndiscography: {len(disco)} releases")
+for r in disco[:3]:
+    print(f"  {r.release_date}  {r.type.value:<12} {r.title}")
+
+# -- Release with tracks ------------------------------------------------------
+release, songs, apps = m.get_release(451600)  # Carcass — Heartwork
+print(f"\n{release.title} ({release.release_date}) — {release.type.value}")
+print(f"  label: {release.label_name}, format: {release.format.value if release.format else release.format_raw}")
+print(f"  total length: {release.total_length}, reviews: {release.reviews_count}@{release.reviews_avg_percent}%")
+for song, app in list(zip(songs, apps))[:3]:
+    print(f"  {app.track_no:>2}. {song.title:<25} {song.length}")
+
+# -- Per-release credits (band / guest / staff) ------------------------------
+print("\nstaff credits on Heartwork:")
+for credit in m.get_release_lineup(451600):
+    if credit.section is CreditSection.STAFF:
+        print(f"  {credit.artist_name:<25} {credit.role}")
+
+# -- Other versions / re-issues ----------------------------------------------
+versions = m.get_other_versions(451600)
+print(f"\nHeartwork has {len(versions)} known versions; first three:")
+for v in versions[:3]:
+    print(f"  {v.release_date}  {v.format.value if v.format else '?':<10} {v.label_name} / {v.catalog_no}")
+
+# -- Split release: per-track band attribution -------------------------------
+split, _, split_apps = m.get_release(485040)  # Napalm Death / S.O.B.
+print(f"\nsplit '{split.title}' attributes tracks to band ids: {sorted(set(a.band_id for a in split_apps))}")
+
+# -- Artist detail ------------------------------------------------------------
+steer = m.get_artist(490)
+print(f"\nartist: {steer.alias} — {steer.real_name}, born {steer.born}")
+
+# -- Search bands with full filter set ---------------------------------------
+print("\nPortuguese heavy metal bands formed in the 80s:")
+for hit in m.search_bands(country="PT", genre="Heavy", year_from=1980, year_to=1989):
+    print(f"  {hit.ma_id:<7} {hit.name}")
+
+# -- Search albums by release type -------------------------------------------
+print("\nCarcass full-lengths and EPs:")
+for hit in m.search_albums(
+    band_name="Carcass",
+    release_type=[ReleaseType.FULL_LENGTH, ReleaseType.EP],
+):
+    print(f"  {hit.release_date}  {hit.type.value if hit.type else '?':<11} {hit.title}")
+
+# -- Search songs (returns rich SongSearchHit with band_id/release_id/lyrics_id)
+print("\nsongs titled 'Heartwork' across MA:")
+for hit in m.search_songs(song_title="Heartwork", band_name="Carcass"):
+    print(f"  {hit.lyrics_id:<8} {hit.band_name} — {hit.title}  ({hit.release_type.value if hit.release_type else '?'})")
+
+# -- Lyrics by song id --------------------------------------------------------
+text = m.get_lyrics_by_song_id(172090)
+if text:
+    print("\nfirst lines of Heartwork lyrics:")
+    for line in text.splitlines()[:6]:
+        print(" ", line)
+
+# -- High-level lyrics generator ---------------------------------------------
+print("\nfirst hit from full-text lyrics search 'ace of spades':")
+for lyrics in m.get_lyrics(song_title="Ace of Spades", band_name="Motörhead"):
+    print(lyrics.splitlines()[0])
     break
-
-    # output:
-    # {'song_id': u'1780488',
-    # 'band_name': u'Bergen 88 Belsen',
-    # 'song_name': u'Black Metal ist Krieg',
-    # 'album_type': u'Demo',
-    # 'album_url': u'"https://www.metal-archives.com/bands/Bergen_88_Belsen/3540292675',
-    # 'album_name': u'Demo'}
-
-
-# generator, not a list
-for lyrics in m.get_lyrics(song_title="ace of spades",
-                          band_name="Motorhead"):
-    print(lyrics)
-    break
-        # output:
-        # If you like to gamble, I tell you I'm your man,
-        # You win some, lose some, all the same to me,
-        # The pleasure is to play, makes no difference what you say,
-        # I don't share your greed, the only card I need is
-        # The Ace Of Spades
-
-        # Playing for the high one, dancing with the devil,
-        # Going with the flow, it's all the same to me,
-        # Seven or Eleven, snake eyes watching you,
-        # Double up or quit, double stake or split,
-        # The Ace Of Spades
-
-        # You know I'm born to lose, and gambling's for fools,
-        # But that's the way I like it baby,
-        # I don't wanna live for ever,
-        # And don't forget the joker!
-
-        # Pushing up the ante, I know you wanna see me,
-        # Read 'em and weep, the dead man's hand again,
-        # I see it in your eyes, take one look and die,
-        # The only thing you see, you know it's gonna be,
-        # The Ace Of Spades
-
-# generator, not a list
-for lyrics in m.search_lyrics(genre="death metal"):
-        print(lyrics)
-        break
-        # output:
-        # endless eons
-        # fruitless quest
-        # destiny now within grasp
-        # violent eddy
-        # currents
-        # dimensional decompression
-        # pulling the earth and the moon
-        # through
-        # the dark caesura
-        # vacuum loses orbit
-        # binary eclipse
-        # molecular
-        # circumvention
-        # fiery microchasm
-        # in the negative void
-        # mankind inert; chronic
-        # limbo
-        # bathed in ultraviolet dead shadows
-        # neutrinos pulling down
-        # passing
-        # through positive
-        # matter molecularly decompose
-        # lifeless matter breaking down
-        # then refusing
-        # grisly mutations
-        # returning to the plan
-        # mankind writhing in
-        # pain
-        # earth
-        # lost orbit; stagnant in space
-        # vegetating; revelating
-        # sun's
-        # zenith deterred
-        # partially eclipsed on the horizon
-        # unvisioned
-        # prophecy
-        # cessating planet
-        # impending death
-        # mankind caught in the grip of leap hour
-        # tumultuous... vexating
-        # mass
-        # atom separation dissolving
-        # shrinking the earthen
-        # core... implode
-        # venting, burning, surface, corrodes
-        # lava, fire, air, explodes
-        # hydrogen, oxygen
-        # supernova
-        # gravitation, inertia
-        # black.. hole.. tethering.. inward
-        # the
-        # planets align one last time
-        # winding around the anomaly
-        # moon fragmenting, then
-        # descending
-        # into the newborn vortex
-        # solar system; centrifuge
-        # body collisions
-        # at light speeds
-        # random explosions, stars erupt
-        # dying lights; enter
-        # fate
-        # timeless, apocalypse, azygous,
-        # ending... leaving
-        # behind... nothing
-        # vacuous, vague spectres still revolve
-        # around a dead hole

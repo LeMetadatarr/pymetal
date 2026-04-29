@@ -1,5 +1,4 @@
-requests
+curl_cffi
 bs4
-requests_cache
-random-user-agent
 lxml
+pydantic

@@ -1,2 +1,43 @@
 from pymetal.archives import MetalArchives
-from pymetal.lyrics import DarkLyrics, AZLyrics
+from pymetal.http import Client
+from pymetal.models import (
+    AlbumSearchHit,
+    Artist,
+    Audit,
+    Band,
+    BandSearchHit,
+    BandStatus,
+    CreditSection,
+    Label,
+    LineupMember,
+    LineupStatus,
+    Release,
+    ReleaseFormat,
+    ReleaseLineup,
+    ReleaseType,
+    Song,
+    SongSearchHit,
+    TrackAppearance,
+)
+
+__all__ = [
+    "MetalArchives",
+    "Client",
+    "AlbumSearchHit",
+    "Artist",
+    "Audit",
+    "Band",
+    "BandSearchHit",
+    "BandStatus",
+    "CreditSection",
+    "Label",
+    "LineupMember",
+    "LineupStatus",
+    "Release",
+    "ReleaseFormat",
+    "ReleaseLineup",
+    "ReleaseType",
+    "Song",
+    "SongSearchHit",
+    "TrackAppearance",
+]

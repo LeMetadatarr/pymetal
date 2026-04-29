@@ -47,6 +47,25 @@ print(f"  total length: {release.total_length}, reviews: {release.reviews_count}
 for song, app in list(zip(songs, apps))[:3]:
     print(f"  {app.track_no:>2}. {song.title:<25} {song.length}")
 
+# -- Similar bands (MA's "Similar artists" tab) ------------------------------
+print("\nbands similar to Carcass (top 5 by user-vote score):")
+for r in m.get_band_recommendations(14)[:5]:
+    print(f"  {r.match_score:>4} votes  {r.name:<25} ({r.country})")
+
+# -- All user reviews of this band's discography -----------------------------
+# Note: MA's default sort triggers a server-side SQL error; the endpoint
+# silently sends rating-desc instead.
+print("\nfirst 5 user reviews of Carcass releases:")
+from itertools import islice
+for r in islice(m.get_band_reviews(14), 5):
+    print(f"  {r.score_percent:>3}%  {r.release_title:<30} by {r.username:<20} ({r.posted_on})")
+
+# -- External links (Spotify / Bandcamp / official site / merch) -------------
+links = m.get_links(14)  # default entity_type='band'; also works with 'label'
+print(f"\n{len(links)} external links for Carcass; first 5:")
+for l in links[:5]:
+    print(f"  [{l.section:<20}] {l.name:<25} {l.url}")
+
 # -- Per-release credits (band / guest / staff) ------------------------------
 print("\nstaff credits on Heartwork:")
 for credit in m.get_release_lineup(451600):

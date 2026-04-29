@@ -15,6 +15,8 @@ from pymetal.http import Client
 from pymetal.locators import (
     URL_ARTIST,
     URL_BAND,
+    URL_BAND_RECOMMENDATIONS,
+    URL_BAND_REVIEWS,
     URL_BAND_TAB_DISCOGRAPHY,
     URL_BROWSE_COUNTRY,
     URL_BROWSE_GENRE,
@@ -23,9 +25,11 @@ from pymetal.locators import (
     URL_BROWSE_LETTER,
     URL_COUNTRY_INDEX,
     URL_LABEL,
+    URL_LINKS,
     URL_LYRICS,
     URL_RELEASE,
     URL_RELEASE_VERSIONS,
+    URL_REVIEW_BROWSE,
     URL_RIP_ARTISTS,
     URL_SEARCH_ALBUMS,
     URL_SEARCH_BANDS,
@@ -80,6 +84,25 @@ def main() -> None:
         ("browse_labels_country_pt.json", URL_BROWSE_LABELS_COUNTRY.format(country="PT"), None),
         ("browse_labels_letter_a.json", URL_BROWSE_LABELS_LETTER.format(letter="A"), None),
         ("country_index.html", URL_COUNTRY_INDEX, None),
+        # Reviews — fixed period (April 2026) keeps the fixture stable.
+        ("reviews_2026_04.json", URL_REVIEW_BROWSE.format(year_month="2026-04"), None),
+        # Band-scoped reviews; MA's default sort errors out (SQL bug), use Rating-desc.
+        (
+            "reviews_band_carcass.json",
+            URL_BAND_REVIEWS.format(band_id=14),
+            {"iSortCol_0": 2, "sSortDir_0": "desc"},
+        ),
+        # Per-band: similar artists + external links
+        (
+            "band_recommendations_carcass.html",
+            URL_BAND_RECOMMENDATIONS.format(band_id=14),
+            None,
+        ),
+        (
+            "band_links_carcass.html",
+            URL_LINKS.format(entity_type="band", entity_id=14),
+            None,
+        ),
         ("lyrics_5060.html", URL_LYRICS + "5060", None),
     ]
     for fname, path, params in targets:

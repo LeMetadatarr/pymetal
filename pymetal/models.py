@@ -117,6 +117,41 @@ class UpcomingRelease(BaseModel):
     release_date: Optional[str] = None  # human-readable, e.g. "April 29th, 2026"
 
 
+class BandRecommendation(BaseModel):
+    """A row from MA's 'Similar artists' tab."""
+
+    band_id: int
+    name: str
+    url: Optional[HttpUrl] = None
+    country: Optional[str] = None
+    genre: Optional[str] = None
+    match_score: Optional[int] = None  # how many users voted them as similar
+
+
+class ExternalLink(BaseModel):
+    """A single row from a band's or label's external-links tab."""
+
+    name: str  # the service or merch shop label MA shows ('Bandcamp', 'Spotify')
+    url: HttpUrl
+    section: str = "Other"  # 'Official' / 'Official merchandise' / 'Tabulatures' / 'Other'
+
+
+class Review(BaseModel):
+    """A user review of a release."""
+
+    review_id: Optional[int] = None
+    review_url: Optional[HttpUrl] = None
+    title: Optional[str] = None  # review's own title (separate from the release)
+    band_id: Optional[int] = None
+    band_name: str
+    release_id: Optional[int] = None
+    release_title: str
+    score_percent: Optional[int] = None
+    username: Optional[str] = None
+    posted_on: Optional[str] = None  # 'YYYY-MM-DD HH:MM' once we combine day+time
+    body: Optional[str] = None       # only populated by `get_review(review_id)`
+
+
 class RIPArtist(BaseModel):
     """A row in MA's deceased-artists list (`/artist/rip`)."""
 

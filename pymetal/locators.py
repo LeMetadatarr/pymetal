@@ -58,6 +58,8 @@ RELEASE_FORMAT_CODES: Dict[str, int] = {
 URL_LYRICS = "release/ajax-view-lyrics/id/"
 URL_BAND_RANDOM = "band/random"
 URL_BAND_TAB_DISCOGRAPHY = "band/discography/id/{band_id}/tab/all"
+URL_BAND_RECOMMENDATIONS = "band/ajax-recommendations/id/{band_id}"
+URL_LINKS = "link/ajax-list/type/{entity_type}/id/{entity_id}"
 URL_RELEASE = "albums/_/_/{release_id}"
 URL_BAND = "bands/_/{band_id}"
 URL_ARTIST = "artists/_/{artist_id}"
@@ -73,6 +75,10 @@ URL_RIP_ARTISTS = "artist/ajax-rip/"
 URL_BROWSE_LABELS_COUNTRY = "label/ajax-list/c/{country}/json/1"
 URL_BROWSE_LABELS_LETTER = "label/ajax-list/json/1/l/{letter}"
 URL_COUNTRY_INDEX = "label/country"  # canonical list of MA country codes
+
+# Reviews
+URL_REVIEW_BROWSE = "review/ajax-list-browse/by/date/selection/{year_month}/json/1"
+URL_BAND_REVIEWS = "review/ajax-list-band/id/{band_id}/json/1"
 
 LYRICS_NOT_AVAILABLE = "(lyrics not available)"
 

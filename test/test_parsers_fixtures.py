@@ -13,13 +13,20 @@ from __future__ import annotations
 from collections import Counter
 
 from pymetal.endpoints.artists import get_artist
-from pymetal.endpoints.bands import get_band, get_lineup
+from pymetal.endpoints.bands import (
+    get_band,
+    get_band_recommendations,
+    get_lineup,
+    get_links,
+)
 from pymetal.endpoints.browse import (
     browse_bands_by_country,
     browse_bands_by_genre,
     browse_bands_by_letter,
     browse_labels_by_country,
     browse_labels_by_letter,
+    browse_reviews,
+    get_band_reviews,
     get_rip_artists,
     get_upcoming_releases,
     list_countries,
@@ -378,6 +385,64 @@ def test_browse_labels_by_letter(fake_client):
     # diacritics slip in.
     a_starts = sum(1 for h in hits if h.name and h.name[0].upper() == "A")
     assert a_starts / len(hits) > 0.9
+
+
+def test_get_band_recommendations_carcass(fake_client):
+    c = fake_client(
+        {"band/ajax-recommendations/id/14": "band_recommendations_carcass.html"}
+    )
+    rows = get_band_recommendations(14, client=c)
+    assert rows
+    # Sorted-by-score: top entry has the highest match_score
+    assert rows[0].match_score is not None
+    assert rows[0].match_score >= (rows[-1].match_score or 0)
+    # Recommendations exclude the band itself
+    assert all(r.band_id != 14 for r in rows)
+    # Famous similar acts present
+    names = {r.name for r in rows}
+    assert "Napalm Death" in names or "Exhumed" in names
+
+
+def test_get_links_carcass_groups_by_section(fake_client):
+    c = fake_client(
+        {"link/ajax-list/type/band/id/14": "band_links_carcass.html"}
+    )
+    rows = get_links(14, client=c)
+    assert rows
+    sections = {r.section for r in rows}
+    # Carcass page renders Official + Official merchandise + Tablatures sections
+    assert "Official" in sections
+    assert any("merchandise" in s.lower() for s in sections)
+    # All URLs are well-formed (HttpUrl validation already enforces this)
+    assert all(r.name and str(r.url).startswith("http") for r in rows)
+
+
+def test_get_band_reviews(fake_client):
+    """Carcass discography reviews — exercises the SQL-error workaround
+    (we send Rating-desc instead of MA's broken default sort)."""
+    c = fake_client({"review/ajax-list-band/id/14": "reviews_band_carcass.json"})
+    rows = list(get_band_reviews(14, paginate=False, client=c))
+    assert rows
+    assert all(r.band_id == 14 for r in rows)
+    assert all(r.review_id and r.release_id for r in rows)
+    assert all(r.score_percent is not None for r in rows)
+    # Reviews span multiple Carcass releases
+    assert len({r.release_id for r in rows}) > 3
+
+
+def test_browse_reviews(fake_client):
+    c = fake_client({"review/ajax-list-browse": "reviews_2026_04.json"})
+    rows = list(browse_reviews(year=2026, month=4, paginate=False, client=c))
+    assert rows
+    sample = rows[0]
+    # Every row must carry the ids the AJAX response embeds
+    assert sample.review_id and sample.release_id
+    assert sample.band_name and sample.release_title
+    # Score is parsed to int, posted_on combines period + day + time
+    assert sample.score_percent is not None and 0 <= sample.score_percent <= 100
+    assert sample.posted_on and sample.posted_on.startswith("2026-04-")
+    # Review's own title (separate from release title) was extracted
+    assert sample.title
 
 
 # ---------------------------------------------------------------------------

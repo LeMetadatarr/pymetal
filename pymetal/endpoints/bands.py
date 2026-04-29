@@ -13,8 +13,21 @@ from pymetal.endpoints._common import (
     split_csv,
 )
 from pymetal.http import Client, default_client
-from pymetal.locators import LINEUP_SECTION_STATUS, URL_BAND, XPATHS
-from pymetal.models import Band, BandStatus, LineupMember, LineupStatus
+from pymetal.locators import (
+    LINEUP_SECTION_STATUS,
+    URL_BAND,
+    URL_BAND_RECOMMENDATIONS,
+    URL_LINKS,
+    XPATHS,
+)
+from pymetal.models import (
+    Band,
+    BandRecommendation,
+    BandStatus,
+    ExternalLink,
+    LineupMember,
+    LineupStatus,
+)
 
 
 def get_band(band_id: int, client: Optional[Client] = None) -> Band:
@@ -103,6 +116,74 @@ def get_lineup(band_id: int, client: Optional[Client] = None) -> List[LineupMemb
                 )
             )
     return rows
+
+
+def get_band_recommendations(
+    band_id: int, client: Optional[Client] = None
+) -> List[BandRecommendation]:
+    """Bands MA shows on the 'Similar artists' tab, sorted by match score."""
+    c = client or default_client
+    resp = c.get(URL_BAND_RECOMMENDATIONS.format(band_id=band_id))
+    tree = parse_html(resp.content)
+
+    out: List[BandRecommendation] = []
+    for tr in tree.xpath("//tr"):
+        link = first(tr.xpath("./td[1]/a/@href"))
+        bid = ma_id_from_url(link)
+        if bid is None or bid == band_id:
+            continue
+        name = _normalise_ws(first(tr.xpath("./td[1]/a/text()"))) or ""
+        country = _normalise_ws(first(tr.xpath("./td[2]/text()")))
+        genre = _normalise_ws(first(tr.xpath("./td[3]/text()")))
+        score_text = _normalise_ws(first(tr.xpath("./td[4]//text()")))
+        score = int(score_text) if score_text and score_text.isdigit() else None
+        out.append(
+            BandRecommendation(
+                band_id=bid,
+                name=name,
+                url=link or None,
+                country=country,
+                genre=genre,
+                match_score=score,
+            )
+        )
+    return out
+
+
+def get_links(
+    entity_id: int,
+    entity_type: str = "band",
+    client: Optional[Client] = None,
+) -> List[ExternalLink]:
+    """External links (Bandcamp, Spotify, official site, ...) for a band or label.
+
+    `entity_type` is `'band'` or `'label'` — those are the two MA exposes.
+    Section headers (Official / Official merchandise / Tabulatures / Other)
+    drive `ExternalLink.section`.
+    """
+    c = client or default_client
+    resp = c.get(URL_LINKS.format(entity_type=entity_type, entity_id=entity_id))
+    tree = parse_html(resp.content)
+
+    out: List[ExternalLink] = []
+    section = "Other"
+    for tr in tree.xpath("//tr"):
+        row_id = tr.get("id", "") or ""
+        if row_id.startswith("header_"):
+            # 'header_Official_merchandise' -> 'Official merchandise'
+            section = row_id.removeprefix("header_").replace("_", " ").strip() or "Other"
+            continue
+        if not row_id.startswith("linkRow"):
+            continue
+        anchor = tr.xpath(".//a[@href]")
+        if not anchor:
+            continue
+        href = anchor[0].get("href", "")
+        name = _normalise_ws(anchor[0].text_content()) or ""
+        if not href or not name:
+            continue
+        out.append(ExternalLink(name=name, url=href, section=section))
+    return out
 
 
 def _parse_role_dates(role: str) -> Tuple[Optional[str], Optional[str]]:

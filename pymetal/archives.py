@@ -55,6 +55,12 @@ class MetalArchives:
     def get_lineup(self, band_id: int) -> List[LineupMember]:
         return _bands.get_lineup(band_id, client=self.client)
 
+    def get_band_recommendations(self, band_id: int):
+        return _bands.get_band_recommendations(band_id, client=self.client)
+
+    def get_links(self, entity_id: int, entity_type: str = "band"):
+        return _bands.get_links(entity_id, entity_type=entity_type, client=self.client)
+
     def random_band(
         self,
         genre: Optional[str] = None,
@@ -189,6 +195,16 @@ class MetalArchives:
     def list_genre_slugs():
         from pymetal.endpoints.browse import list_genre_slugs
         return list_genre_slugs()
+
+    def browse_reviews(self, year=None, month=None, **kw):
+        from pymetal.endpoints.browse import browse_reviews
+        kw.setdefault("client", self.client)
+        return browse_reviews(year=year, month=month, **kw)
+
+    def get_band_reviews(self, band_id: int, **kw):
+        from pymetal.endpoints.browse import get_band_reviews
+        kw.setdefault("client", self.client)
+        return get_band_reviews(band_id, **kw)
 
     # -- lyrics -------------------------------------------------------------
 

@@ -109,7 +109,22 @@ print(f"  styles: {nb.styles}")
 print(f"  {len(nb.sub_labels)} sub-labels; first three: {nb.sub_labels[:3]}")
 
 
-# -- 11. End-to-end: every Portuguese black-metal band's releases pre-2000 --
+# -- 11. Reviews -------------------------------------------------------------
+# /review/browse — listing of reviews posted in a given month. Defaults to
+# the current month when year/month aren't given.
+print("\nfirst 5 reviews from April 2026:")
+for r in islice(ma.browse_reviews(year=2026, month=4), 5):
+    print(f"  [{r.posted_on}] {r.score_percent:>3}% {r.band_name:<20} - {r.release_title[:30]:<30} by {r.username}")
+
+# Filter to highest-rated reviews of the month:
+this_month = list(ma.browse_reviews(year=2026, month=4))
+top5 = sorted(this_month, key=lambda r: -(r.score_percent or 0))[:5]
+print("\ntop 5 by score:")
+for r in top5:
+    print(f"  {r.score_percent}%  {r.band_name} - {r.release_title} ({r.title!r})")
+
+
+# -- 12. End-to-end: every Portuguese black-metal band's releases pre-2000 --
 # Combine browse + per-band discography; demonstrates the catalog walk.
 print("\nPortuguese black-metal demos before 2000 (first 10):")
 shown = 0

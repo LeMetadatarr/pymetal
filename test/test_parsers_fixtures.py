@@ -225,6 +225,11 @@ def test_search_songs_heartwork(fake_client):
     assert all(h.band_id for h in hits)
     assert all(h.release_id for h in hits)
     assert all(h.lyrics_id for h in hits)
+    # Regression: the lyrics-id regex used to be unanchored + greedy and
+    # returned the single char ``"n"`` for every row. lyrics_id must be the
+    # digit string MA actually exposes in its lyrics-toggle widget.
+    assert all(h.lyrics_id.isdigit() for h in hits), [h.lyrics_id for h in hits]
+    assert hits[0].lyrics_id == "172078"
 
 
 def test_search_albums_carcass(fake_client):

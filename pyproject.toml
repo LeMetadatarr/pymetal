@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pymetal"
+dynamic = ["version"]
+description = "metal-archives.com Python client with a relational data model"
+readme = "readme.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "jarbasAi", email = "jarbasai@mailfence.com" }]
+requires-python = ">=3.10"
+dependencies = [
+    "lxml",
+    "mediavocab>=0.1.0",
+    "pydantic>=2",
+    "random-user-agent",
+    "requests",
+]
+
+[project.optional-dependencies]
+stealth = ["curl_cffi"]
+test = ["pytest"]
+
+[project.urls]
+Homepage = "https://github.com/TigreGotico/pymetal"
+Source = "https://github.com/TigreGotico/pymetal"
+
+[tool.setuptools.packages.find]
+exclude = ["test*", "examples*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pymetal.version.__version__" }

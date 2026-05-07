@@ -1,0 +1,34 @@
+name: nightly-live
+
+# Re-runs cassette-backed parser tests against live metal-archives.com so
+# silent upstream HTML drift surfaces within 24 h instead of when a user
+# notices empty results in production.
+#
+# Cassettes are NOT committed back — this job is detect-only. A failure
+# here means cassettes need re-recording locally.
+
+on:
+  schedule:
+    - cron: "17 4 * * *"   # 04:17 UTC daily
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[test]
+      - name: Run cassette tests against live endpoints
+        env:
+          PYMETAL_CASSETTE_MODE: all
+        run: |
+          # ``all`` forces re-recording — overwrites cassettes in the runner
+          # workspace; not committed.
+          pytest -q test/ -k "_vcr"

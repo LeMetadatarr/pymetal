@@ -3,18 +3,8 @@ from random_user_agent.params import SoftwareName, OperatingSystem
 
 
 def get_random_user_agent():
-    # you can also import SoftwareEngine, HardwareType, SoftwareType, Popularity from random_user_agent.params
-    # you can also set number of user agents required by providing `limit` as parameter
-
-    software_names = [SoftwareName.CHROME.value]
-    operating_systems = [OperatingSystem.WINDOWS.value,
-                         OperatingSystem.LINUX.value]
-
-    user_agent_rotator = UserAgent(software_names=software_names,
-                                   operating_systems=operating_systems,
-                                   limit=100)
-
-    return user_agent_rotator.get_random_user_agent()
+    # Returning a fixed modern chrome user agent that matches our impersonation target
+    return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
 
 
 def merge_dict(base, delta):

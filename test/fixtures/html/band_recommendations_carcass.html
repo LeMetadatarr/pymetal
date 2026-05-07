@@ -1,0 +1,153 @@
+<script type="63bad50f99266b974850a938-text/javascript" src="https://www.metal-archives.com/js/jquery/jquery.dataTables.min.js"></script>
+<script type="63bad50f99266b974850a938-text/javascript">
+
+// Prepare band recommendation dialog
+$(document).ready(function() {
+	$(".no-js").removeClass("no-js");
+	$('#similarBandSelection').dialog({ autoOpen: false, width: 600, height: 500, modal: true, overlay: { opacity: 0.5, background: 'white'} });
+	$('#bandSearch').ajaxForm({ target: '#bandSearchResults', beforeSubmit: toggleLoading, success: toggleLoading});
+});
+
+</script>
+
+<div id="band_simartists">
+	<div class="tool_strip top right writeAction">
+			</div>
+</div>
+
+<div class="ui-tabs-panel-content block_spacer_top_36">
+	<table id="artist_list" class="display" cellpadding="0" cellspacing="0">
+		<thead>
+			<tr>
+								<th>Name</th>
+				<th width="82">Country</th>
+				<th>Genre</th>
+				<th>Score</th>
+			</tr>
+		</thead>
+		<tbody>
+		    		    	<tr id="recRow_143">
+		    							<td><a href="https://www.metal-archives.com/bands/Exhumed/143">Exhumed</a></td>
+					<td>United States</td>
+					<td>Goregrind (early); Death Metal/Grindcore (later)</td>
+					<td><span id="score_143">335 </span></td>
+				</tr>
+					    	<tr id="recRow_219">
+		    							<td><a href="https://www.metal-archives.com/bands/Napalm_Death/219">Napalm Death</a></td>
+					<td>United Kingdom</td>
+					<td>Hardcore Punk (early); Grindcore/Death Metal (later)</td>
+					<td><span id="score_219">253 </span></td>
+				</tr>
+					    	<tr id="recRow_3162">
+		    							<td><a href="https://www.metal-archives.com/bands/General_Surgery/3162">General Surgery</a></td>
+					<td>Sweden</td>
+					<td>Death Metal/Goregrind</td>
+					<td><span id="score_3162">224 </span></td>
+				</tr>
+					    	<tr id="recRow_1097">
+		    							<td><a href="https://www.metal-archives.com/bands/Impaled/1097">Impaled</a></td>
+					<td>United States</td>
+					<td>Death Metal/Grindcore</td>
+					<td><span id="score_1097">219 </span></td>
+				</tr>
+					    	<tr id="recRow_43">
+		    							<td><a href="https://www.metal-archives.com/bands/At_the_Gates/43">At the Gates</a></td>
+					<td>Sweden</td>
+					<td>Melodic Death Metal</td>
+					<td><span id="score_43">216 </span></td>
+				</tr>
+					    	<tr id="recRow_2169">
+		    							<td><a href="https://www.metal-archives.com/bands/The_County_Medical_Examiners/2169">The County Medical Examiners</a></td>
+					<td>United States</td>
+					<td>Goregrind</td>
+					<td><span id="score_2169">209 </span></td>
+				</tr>
+					    	<tr id="recRow_2556">
+		    							<td><a href="https://www.metal-archives.com/bands/Haemorrhage/2556">Haemorrhage</a></td>
+					<td>Spain</td>
+					<td>Goregrind</td>
+					<td><span id="score_2556">154 </span></td>
+				</tr>
+					    	<tr id="recRow_1120">
+		    							<td><a href="https://www.metal-archives.com/bands/Repulsion/1120">Repulsion</a></td>
+					<td>United States</td>
+					<td>Grindcore/Death Metal</td>
+					<td><span id="score_1120">145 </span></td>
+				</tr>
+					    	<tr id="recRow_10">
+		    							<td><a href="https://www.metal-archives.com/bands/Arch_Enemy/10">Arch Enemy</a></td>
+					<td>Sweden</td>
+					<td>Melodic Death Metal</td>
+					<td><span id="score_10">139 </span></td>
+				</tr>
+					    	<tr id="recRow_2804">
+		    							<td><a href="https://www.metal-archives.com/bands/Pathologist/2804">Pathologist</a></td>
+					<td>Czechia</td>
+					<td>Death Metal/Goregrind</td>
+					<td><span id="score_2804">136 </span></td>
+				</tr>
+					    	<tr id="recRow_15075">
+		    							<td><a href="https://www.metal-archives.com/bands/Impetigo/15075">Impetigo</a></td>
+					<td>United States</td>
+					<td>Death Metal/Grindcore</td>
+					<td><span id="score_15075">127 </span></td>
+				</tr>
+					    	<tr id="recRow_213">
+		    							<td><a href="https://www.metal-archives.com/bands/Aborted/213">Aborted</a></td>
+					<td>Belgium</td>
+					<td>Death Metal</td>
+					<td><span id="score_213">116 </span></td>
+				</tr>
+					    	<tr id="recRow_5810">
+		    							<td><a href="https://www.metal-archives.com/bands/Intestine_Baalism/5810">Intestine Baalism</a></td>
+					<td>Japan</td>
+					<td>Melodic Death Metal</td>
+					<td><span id="score_5810">102 </span></td>
+				</tr>
+					    	<tr id="recRow_2622">
+		    							<td><a href="https://www.metal-archives.com/bands/Xysma/2622">Xysma</a></td>
+					<td>Finland</td>
+					<td>Death 'n' Roll/Grindcore (early); Stoner/Garage Rock (later)</td>
+					<td><span id="score_2622">102 </span></td>
+				</tr>
+					    	<tr id="recRow_3540469050">
+		    							<td><a href="https://www.metal-archives.com/bands/Pharmacist/3540469050">Pharmacist</a></td>
+					<td>Japan</td>
+					<td>Death Metal/Goregrind (early); Thrash/Melodic Death Metal/Grindcore (later)</td>
+					<td><span id="score_3540469050">99 </span></td>
+				</tr>
+					    	<tr id="recRow_372">
+		    							<td><a href="https://www.metal-archives.com/bands/Regurgitate/372">Regurgitate</a></td>
+					<td>Sweden</td>
+					<td>Goregrind/Grindcore</td>
+					<td><span id="score_372">95 </span></td>
+				</tr>
+					    	<tr id="recRow_2314">
+		    							<td><a href="https://www.metal-archives.com/bands/Dead_Infection/2314">Dead Infection</a></td>
+					<td>Poland</td>
+					<td>Goregrind</td>
+					<td><span id="score_2314">94 </span></td>
+				</tr>
+					    	<tr id="recRow_1022">
+		    							<td><a href="https://www.metal-archives.com/bands/Terrorizer/1022">Terrorizer</a></td>
+					<td>United States</td>
+					<td>Death Metal/Grindcore</td>
+					<td><span id="score_1022">89 </span></td>
+				</tr>
+					    	<tr id="recRow_671">
+		    							<td><a href="https://www.metal-archives.com/bands/Ghoul/671">Ghoul</a></td>
+					<td>United States</td>
+					<td>Death/Thrash Metal/Grindcore</td>
+					<td><span id="score_671">88 </span></td>
+				</tr>
+					    	<tr id="recRow_141">
+		    							<td><a href="https://www.metal-archives.com/bands/Death/141">Death</a></td>
+					<td>United States</td>
+					<td>Death Metal (early); Progressive Death Metal (later)</td>
+					<td><span id="score_141">80 </span></td>
+				</tr>
+										<tr><td colspan="5" id="show_more">(<a href="https://www.metal-archives.com/bands/Carcass/14?showMoreSimilar=1#Similar_artists">see more</a>)</td></tr>
+					</tbody>
+	</table>
+	</div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f41cf44ce6c0370',t:'MTc3NzUwMjQzOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="63bad50f99266b974850a938-|49" defer></script>

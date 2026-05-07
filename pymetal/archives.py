@@ -6,6 +6,15 @@ from __future__ import annotations
 
 from typing import Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 
+from mediavocab import Entity
+from mediavocab import Release as MvRelease
+
+from pymetal.converters import (
+    album_search_hit_to_release,
+    band_search_hit_to_entity,
+    song_search_hit_to_release,
+    stream_links,
+)
 from pymetal.endpoints import bands as _bands
 from pymetal.endpoints import lyrics as _lyrics
 from pymetal.endpoints import releases as _releases
@@ -14,14 +23,11 @@ from pymetal.endpoints._common import ma_id_from_url
 from pymetal.http import Client, default_client
 from pymetal.locators import GENRES, URL_BAND_RANDOM
 from pymetal.models import (
-    AlbumSearchHit,
     Band,
-    BandSearchHit,
     LineupMember,
     Release,
     ReleaseType,
     Song,
-    SongSearchHit,
     TrackAppearance,
 )
 
@@ -60,6 +66,15 @@ class MetalArchives:
 
     def get_links(self, entity_id: int, entity_type: str = "band"):
         return _bands.get_links(entity_id, entity_type=entity_type, client=self.client)
+
+    def get_stream_links(self, band_id: int):
+        """External links that provide audio/video streams (YouTube, Bandcamp, SoundCloud, …).
+
+        Fetches the full links tab and filters to streaming-capable services.
+        Returns a list of ``ExternalLink`` objects — pass to ``band_to_entity(band, links=...)``
+        to get ``entity.extra["stream_urls"]``.
+        """
+        return stream_links(self.get_links(band_id, entity_type="band"))
 
     def random_band(
         self,
@@ -112,17 +127,20 @@ class MetalArchives:
 
     # -- search -------------------------------------------------------------
 
-    def search_bands(self, *args, **kwargs) -> Iterator[BandSearchHit]:
+    def search_bands(self, *args, **kwargs) -> Iterator[Entity]:
         kwargs.setdefault("client", self.client)
-        return _search.search_bands(*args, **kwargs)
+        for hit in _search.search_bands(*args, **kwargs):
+            yield band_search_hit_to_entity(hit)
 
-    def search_albums(self, *args, **kwargs) -> Iterator[AlbumSearchHit]:
+    def search_albums(self, *args, **kwargs) -> Iterator[MvRelease]:
         kwargs.setdefault("client", self.client)
-        return _search.search_albums(*args, **kwargs)
+        for hit in _search.search_albums(*args, **kwargs):
+            yield album_search_hit_to_release(hit)
 
-    def search_songs(self, *args, **kwargs) -> Iterator[SongSearchHit]:
+    def search_songs(self, *args, **kwargs) -> Iterator[MvRelease]:
         kwargs.setdefault("client", self.client)
-        return _search.search_songs(*args, **kwargs)
+        for hit in _search.search_songs(*args, **kwargs):
+            yield song_search_hit_to_release(hit)
 
     # -- release ------------------------------------------------------------
 
@@ -223,9 +241,12 @@ class MetalArchives:
             band_name=band_name,
             release_type=release_type,
         ):
-            if hit.lyrics_id is None:
+            # ``search_songs`` yields mediavocab ``Release`` objects; the MA
+            # lyrics id is stashed under ``external_ids['ma_lyrics_id']``.
+            lyrics_id = hit.external_ids.get("ma_lyrics_id") if hit.external_ids else None
+            if not lyrics_id:
                 continue
-            text = self.get_lyrics_by_song_id(hit.lyrics_id)
+            text = self.get_lyrics_by_song_id(lyrics_id)
             if text:
                 yield text
 

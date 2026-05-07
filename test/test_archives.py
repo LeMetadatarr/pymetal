@@ -73,7 +73,9 @@ class TestMetalArchivesFacade(unittest.TestCase):
         )
         hits = list(m.search_songs(song_title="Heartwork", band_name="Carcass"))
         self.assertGreater(len(hits), 0)
-        self.assertTrue(all(h.title and h.lyrics_id for h in hits))
+        # search_songs yields mediavocab Release objects; title lives in work.title
+        # and lyrics_id is stored in external_ids["ma_lyrics_id"]
+        self.assertTrue(all(h.work.title and h.external_ids.get("ma_lyrics_id") for h in hits))
 
     def test_get_release_full_length(self):
         m = MetalArchives(

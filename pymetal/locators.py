@@ -82,6 +82,25 @@ URL_BAND_REVIEWS = "review/ajax-list-band/id/{band_id}/json/1"
 
 LYRICS_NOT_AVAILABLE = "(lyrics not available)"
 
+# Domains considered streaming/video services for stream_links() in converters.
+STREAM_DOMAINS: List[str] = [
+    "youtube.com",
+    "youtu.be",
+    "bandcamp.com",
+    "soundcloud.com",
+    "spotify.com",
+    "open.spotify.com",
+    "deezer.com",
+    "tidal.com",
+    "music.apple.com",
+    "itunes.apple.com",
+    "last.fm",
+    "mixcloud.com",
+    "reverbnation.com",
+    "vimeo.com",
+    "dailymotion.com",
+]
+
 # Regexes
 RE_LYRIC_ID = re.compile(r"id=.+[a-z]+.(?P<id>[\w]+)")
 RE_BAND_NAME = re.compile(r'title="(?P<name>.*)\"')

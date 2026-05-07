@@ -13,9 +13,13 @@ requires-python = ">=3.10"
 dependencies = [
     "curl_cffi",
     "lxml",
+    "mediavocab>=0.1.0",
     "pydantic>=2",
     "random-user-agent",
 ]
+
+[project.optional-dependencies]
+test = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/TigreGotico/pymetal"

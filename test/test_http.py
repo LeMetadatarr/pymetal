@@ -29,9 +29,7 @@ class _RecordingSession:
 
 
 def _client_with_session(session: _RecordingSession, **kwargs) -> Client:
-    c = Client(**kwargs)
-    c.session = session
-    return c
+    return Client(session=session, **kwargs)
 
 
 def test_cache_hit_skips_network():

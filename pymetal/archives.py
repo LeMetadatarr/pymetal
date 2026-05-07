@@ -20,7 +20,8 @@ from pymetal.endpoints import lyrics as _lyrics
 from pymetal.endpoints import releases as _releases
 from pymetal.endpoints import search as _search
 from pymetal.endpoints._common import ma_id_from_url
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import GENRES, URL_BAND_RANDOM
 from pymetal.models import (
     Band,
@@ -45,7 +46,7 @@ def _normalise_genre(g: str) -> str:
 
 class MetalArchives:
     def __init__(self, client: Optional[Client] = None) -> None:
-        self.client = client or default_client
+        self.client = client or default_client()
 
     # -- band ---------------------------------------------------------------
 

@@ -12,7 +12,8 @@ from pymetal.endpoints._common import (
     parse_html,
     split_csv,
 )
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import (
     LINEUP_SECTION_STATUS,
     URL_BAND,
@@ -32,7 +33,7 @@ from pymetal.models import (
 
 def get_band(band_id: int, client: Optional[Client] = None) -> Band:
     """Fetch a band's metadata page and return a `Band`."""
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_BAND.format(band_id=band_id))
     tree = parse_html(resp.content)
 
@@ -89,7 +90,7 @@ def get_lineup(band_id: int, client: Optional[Client] = None) -> List[LineupMemb
     metal-archives renders Current / Past / Last known / Live / Guest-Session
     as separate `band_tab_members_<status>` divs — one row per (artist, role).
     """
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_BAND.format(band_id=band_id))
     tree = parse_html(resp.content)
 
@@ -122,7 +123,7 @@ def get_band_recommendations(
     band_id: int, client: Optional[Client] = None
 ) -> List[BandRecommendation]:
     """Bands MA shows on the 'Similar artists' tab, sorted by match score."""
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_BAND_RECOMMENDATIONS.format(band_id=band_id))
     tree = parse_html(resp.content)
 
@@ -161,7 +162,7 @@ def get_links(
     Section headers (Official / Official merchandise / Tabulatures / Other)
     drive `ExternalLink.section`.
     """
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_LINKS.format(entity_type=entity_type, entity_id=entity_id))
     tree = parse_html(resp.content)
 

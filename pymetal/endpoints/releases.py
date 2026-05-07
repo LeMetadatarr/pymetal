@@ -12,7 +12,8 @@ from pymetal.endpoints._common import (
     parse_html,
     parse_int,
 )
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import (
     URL_BAND_TAB_DISCOGRAPHY,
     URL_RELEASE,
@@ -89,7 +90,7 @@ def get_release(
     raw band string in lieu of an ma_id (callers can resolve with the
     H1 band-link list).
     """
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_RELEASE.format(release_id=release_id))
     tree = parse_html(resp.content)
 
@@ -252,7 +253,7 @@ def get_release_lineup(
     that preceded it (`Band members`, `Guest/session musicians`,
     `Miscellaneous staff`).
     """
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_RELEASE.format(release_id=release_id))
     tree = parse_html(resp.content)
 
@@ -305,7 +306,7 @@ def get_other_versions(
     release_id: int, client: Optional[Client] = None
 ) -> List[Release]:
     """All other versions/editions/re-issues of this release."""
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_RELEASE_VERSIONS.format(release_id=release_id))
     tree = parse_html(resp.content)
     out: List[Release] = []
@@ -346,7 +347,7 @@ def get_discography(
     band_id: int, client: Optional[Client] = None
 ) -> List[Release]:
     """All releases for a band — index rows only."""
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_BAND_TAB_DISCOGRAPHY.format(band_id=band_id))
     tree = parse_html(resp.content)
 

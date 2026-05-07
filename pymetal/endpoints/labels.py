@@ -11,14 +11,15 @@ from pymetal.endpoints._common import (
     ma_id_from_url,
     parse_html,
 )
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import URL_LABEL
 from pymetal.models import Label
 
 
 def get_label(label_id: int, client: Optional[Client] = None) -> Label:
     """Fetch a label's detail page."""
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_LABEL.format(label_id=label_id))
     tree = parse_html(resp.content)
 

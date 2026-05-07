@@ -93,8 +93,8 @@ class CassetteClient:
 
     def _real_client(self):
         if self._real is None:
-            from pymetal.http import Client
-            self._real = Client()
+            from pymetal.transport import default_client
+            self._real = default_client()
         return self._real
 
     def _key(self, method: str, url: str, params: Optional[Mapping[str, Any]]) -> str:

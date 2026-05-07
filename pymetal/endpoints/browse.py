@@ -14,7 +14,8 @@ from typing import Iterator, Optional
 
 from pymetal.endpoints._common import ma_id_from_url
 from pymetal.endpoints.releases import _coerce_release_type
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import (
     GENRES,
     URL_BROWSE_COUNTRY,
@@ -113,7 +114,7 @@ def browse_bands_by_country(
     Returns more rows than `search_bands(country=...)` because it walks
     the dedicated browse endpoint rather than the search index.
     """
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_BROWSE_COUNTRY.format(country=country_code),
@@ -144,7 +145,7 @@ def browse_bands_by_genre(
     `pymetal.locators.GENRES`); they are *not* the free-text genre
     strings shown on each band page.
     """
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_BROWSE_GENRE.format(genre=genre_slug),
@@ -173,7 +174,7 @@ def browse_bands_by_letter(
 
     'NBR' covers names starting with a digit; '~' covers symbols/non-Latin.
     """
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_BROWSE_LETTER.format(letter=letter),
@@ -198,7 +199,7 @@ def get_rip_artists(
     client: Optional[Client] = None,
 ) -> Iterator[RIPArtist]:
     """Every deceased artist MA tracks (~10k rows when fully paginated)."""
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_RIP_ARTISTS,
@@ -244,7 +245,7 @@ def browse_labels_by_country(
     rows — call `get_label(label.ma_id)` for full detail (address,
     sub-labels, audit, etc.).
     """
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_BROWSE_LABELS_COUNTRY.format(country=country_code),
@@ -277,7 +278,7 @@ def browse_labels_by_letter(
     Same shape as `browse_labels_by_country`; the row layout adds a
     country column at index 4.
     """
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_BROWSE_LABELS_LETTER.format(letter=letter),
@@ -306,7 +307,7 @@ def list_countries(client: Optional[Client] = None) -> dict[str, str]:
     """
     from lxml import html as lxml_html
 
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_COUNTRY_INDEX)
     tree = lxml_html.fromstring(resp.content)
     out: dict[str, str] = {}
@@ -356,7 +357,7 @@ def browse_reviews(
     m = month or today.month
     period = f"{y:04d}-{m:02d}"
 
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_REVIEW_BROWSE.format(year_month=period),
@@ -422,7 +423,7 @@ def get_band_reviews(
     (`Unknown column 'review_date DESC'`) — we sort by rating-desc
     instead, which works.
     """
-    c = client or default_client
+    c = client or default_client()
     # Override the broken default sort.
     index = 0
     while True:
@@ -484,7 +485,7 @@ def get_upcoming_releases(
     client: Optional[Client] = None,
 ) -> Iterator[UpcomingRelease]:
     """All releases scheduled for the future on MA."""
-    c = client or default_client
+    c = client or default_client()
     for row in _walk(
         c,
         URL_UPCOMING_RELEASES,

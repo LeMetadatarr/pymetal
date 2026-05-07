@@ -2,7 +2,7 @@
 
 A Python client for [Encyclopaedia Metallum](https://www.metal-archives.com/) (the Metal Archives) with a relational data model that captures what flat scrapers lose: splits, lineups changing over time, and tracks reused across releases.
 
-Built on `curl_cffi` for TLS-fingerprint bypass and `pydantic` for typed, validated data.
+Built on a pluggable HTTP layer (`curl_cffi` for TLS-fingerprint bypass, recommended) and `pydantic` for typed, validated data. Search methods return [`mediavocab`](https://github.com/OpenVoiceOS/mediavocab) `Release` and `Entity` objects for interoperability with other media clients.
 
 ## Why
 
@@ -16,24 +16,67 @@ Most scrapers model `Track = (id, title, band, album)`. That collapses three ind
 
 ## Install
 
+Recommended (with `curl_cffi` for browser-impersonated TLS — metal-archives.com is heavily defended):
+
 ```bash
-pip install -e .
+pip install pymetal[stealth]
 ```
 
-Requires Python 3.10+. Pulls `curl_cffi`, `lxml`, `pydantic>=2`, `random-user-agent`.
+Minimal install (plain `requests`, will likely be blocked by metal-archives.com):
+
+```bash
+pip install pymetal
+```
+
+Requires Python 3.10+. Core deps: `lxml`, `mediavocab`, `pydantic>=2`, `random-user-agent`, `requests`. The `[stealth]` extra adds `curl_cffi`.
+
+### HTTP transport
+
+`pymetal` does not load `curl_cffi` automatically — it is opt-in to keep the
+default install lightweight on platforms where `curl_cffi` is hard to build.
+Selection rules for the default client:
+
+* `PYMETAL_TRANSPORT=curl_cffi` **and** `curl_cffi` installed → curl_cffi-backed
+  client (recommended; bypasses Cloudflare/TLS fingerprinting).
+* Otherwise → plain `requests`-backed client + a `RuntimeWarning` noting that
+  metal-archives.com may block these requests.
+
+You can also inject your own session into `Client(session=...)` to bypass the
+auto-selection entirely (useful for tests, custom retry logic, or proxies):
+
+```python
+from pymetal.http import Client
+from pymetal import MetalArchives
+
+# Bring-your-own session (anything with a requests-like .get() API).
+my_session = ...
+ma = MetalArchives(client=Client(session=my_session))
+```
 
 ## Quick start
 
 ```python
+from mediavocab import Release, Entity
+
 from pymetal import MetalArchives
 
 ma = MetalArchives()
 
-# Search bands with the full advanced-search filter set.
-for hit in ma.search_bands(country="PT", genre="Heavy", year_from=1980, year_to=1989):
-    print(hit.ma_id, hit.name, hit.country)
+# Search bands → mediavocab Entity objects
+for entity in ma.search_bands(country="PT", genre="Heavy", year_from=1980, year_to=1989):
+    print(entity.external_ids.get("ma_band_id"), entity.name, entity.extra.get("country"))
 
-# Pull a release with all its tracks (per-band attribution on splits).
+# Search albums → mediavocab Release objects
+for release in ma.search_albums(band_name="Carcass", exact_band_match=True):
+    artist = release.work.credits[0].entity.name if release.work.credits else ""
+    print(release.work.title, artist, release.work.extra.get("release_type"))
+
+# Search songs → mediavocab Release objects (lyrics_id preserved)
+for release in ma.search_songs(song_title="Heartwork", band_name="Carcass"):
+    lyrics_id = release.work.external_ids.get("ma_lyrics_id")
+    print(release.work.title, lyrics_id)
+
+# Pull a full release with all tracks (MA models — rich detail).
 release, songs, appearances = ma.get_release(451600)  # Carcass — Heartwork
 print(release.cover_url, release.total_length, release.label_name)
 print(release.reviews_count, "reviews", release.reviews_avg_percent, "% avg")
@@ -46,9 +89,67 @@ for member in ma.get_lineup(14):
 print(ma.get_lyrics_by_song_id(172090))
 ```
 
+### Converting MA models to mediavocab
+
+Detail methods (`get_band`, `get_release`, `get_artist`, `get_label`) return rich MA-specific Pydantic
+models. Use the converter functions to get mediavocab objects:
+
+```python
+from pymetal import MetalArchives, band_to_entity, ma_release_to_release, artist_to_entity, label_to_entity
+
+ma = MetalArchives()
+
+band = ma.get_band(14)                      # Band (rich MA model)
+entity = band_to_entity(band)               # mediavocab Entity
+print(entity.name, entity.external_ids)     # {"ma_band_id": "14"}
+
+release, songs, apps = ma.get_release(451600)
+mv_release = ma_release_to_release(release)  # mediavocab Release
+print(mv_release.work.title, mv_release.external_ids)
+
+artist = ma.get_artist(490)
+entity = artist_to_entity(artist)
+```
+
+### Return types at a glance
+
+**`Entity`** — from `search_bands`:
+
+```python
+entity.name                              # band name
+entity.kind                              # EntityKind.GROUP
+entity.external_ids.get("ma_band_id")    # MA numeric id
+entity.extra.get("artist_url")           # MA profile URL
+entity.extra.get("genre")                # genre string
+entity.extra.get("country")              # country code
+```
+
+**`Release`** — from `search_albums`:
+
+```python
+release.uri                              # MA album URL
+release.work.title                       # album title
+release.work.credits[0].entity.name      # band name (if available)
+release.work.external_ids.get("ma_album_id")  # MA numeric id
+release.work.extra.get("release_type")   # "Full-length", "EP", etc.
+release.work.extra.get("release_date")   # date string
+```
+
+**`Release`** — from `search_songs`:
+
+```python
+release.work.title                             # song title
+release.work.credits[0].entity.name            # band name (if available)
+release.work.external_ids.get("ma_song_id")    # MA song id
+release.work.external_ids.get("ma_lyrics_id")  # lyrics fetch id
+release.work.extra.get("ma_release_title")     # album title
+release.work.extra.get("release_type")         # release type
+```
+
 More examples in [`examples/`](examples/):
 - [`metalarchives.py`](examples/metalarchives.py) — full API tour
 - [`browse.py`](examples/browse.py) — catalog walks (country / genre / letter / labels / reviews / upcoming / RIP)
+- [`genre_streams.py`](examples/genre_streams.py) — find YouTube / Bandcamp / SoundCloud URLs for bands in a genre
 - [`portuguese_heavy_metal_pre2000.py`](examples/portuguese_heavy_metal_pre2000.py) — resumable lyrics-corpus crawl
 - [`metallvm-rest.py`](examples/metallvm-rest.py) — FastAPI server exposing every endpoint over HTTP
 
@@ -58,9 +159,9 @@ More examples in [`examples/`](examples/):
 
 | Function | What it returns |
 |---|---|
-| `search_bands(...)` | `Iterator[BandSearchHit]` — every advanced filter (country, status, year range, themes, location, label) |
-| `search_albums(...)` | `Iterator[AlbumSearchHit]` — release type, format, label, catalog/barcode, year+month range |
-| `search_songs(...)` | `Iterator[SongSearchHit]` — full-text lyrics search; carries band_id / release_id / lyrics_id |
+| `search_bands(...)` | `Iterator[Entity]` — every advanced filter (country, status, year range, themes, location, label) |
+| `search_albums(...)` | `Iterator[Release]` — release type, format, label, catalog/barcode, year+month range |
+| `search_songs(...)` | `Iterator[Release]` — full-text lyrics search; `ma_lyrics_id` in `work.external_ids` |
 
 ### Detail pages
 
@@ -84,18 +185,19 @@ More examples in [`examples/`](examples/):
 
 | Function | What it returns |
 |---|---|
-| `browse_bands_by_country(code)` | `Iterator[BandSearchHit]` — full country listing |
-| `browse_bands_by_genre(slug)` | `Iterator[BandSearchHit]` — 23-bucket coarse taxonomy |
-| `browse_bands_by_letter(letter)` | `Iterator[BandSearchHit]` — alphabetical (A–Z, NBR, ~) |
+| `browse_bands_by_country(code)` | `Iterator[BandSearchHit]` |
+| `browse_bands_by_genre(slug)` | `Iterator[BandSearchHit]` |
+| `browse_bands_by_letter(letter)` | `Iterator[BandSearchHit]` |
 | `browse_labels_by_country(code)` | `Iterator[Label]` |
 | `browse_labels_by_letter(letter)` | `Iterator[Label]` |
-| `browse_reviews(year, month)` | `Iterator[Review]` — reviews posted in a given month |
-| `get_upcoming_releases()` | `Iterator[UpcomingRelease]` — scheduled future releases |
-| `get_rip_artists()` | `Iterator[RIPArtist]` — MA's deceased-artists list |
-| `list_countries()` | `dict[code, name]` — all MA-known country codes |
-| `list_genre_slugs()` | `list[str]` — the 23 genre browse slugs |
+| `browse_reviews(year, month)` | `Iterator[Review]` |
+| `get_upcoming_releases()` | `Iterator[UpcomingRelease]` |
+| `get_rip_artists()` | `Iterator[RIPArtist]` |
+| `list_countries()` | `dict[code, name]` |
+| `list_genre_slugs()` | `list[str]` |
 
-All return Pydantic v2 models — `.model_dump_json()` round-trip works on every type.
+Detail methods return Pydantic v2 MA models — `.model_dump_json()` round-trip works on every type.
+Use `band_to_entity()`, `ma_release_to_release()`, `artist_to_entity()`, `label_to_entity()` to convert to mediavocab.
 
 ## Documentation
 

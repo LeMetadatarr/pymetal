@@ -1,17 +1,20 @@
-"""HTTP layer: curl_cffi (TLS fingerprint bypass) + small in-process cache.
+"""HTTP layer: pluggable session (curl_cffi or requests) + small in-process cache.
 
 `requests_cache` doesn't wrap curl_cffi sessions, so we keep a tiny LRU-ish
 dict keyed on (method, url, sorted-params). Good enough for a scraper —
 metal-archives is mostly idempotent and we want to avoid hammering it from
 tests and notebooks.
+
+The HTTP backend (curl_cffi vs plain requests) is selected by
+:func:`pymetal.transport.default_client`. ``Client`` itself is transport-
+agnostic: it talks to whatever ``session`` object is injected. See
+``pymetal.transport`` for the env-var-driven selection logic.
 """
 from __future__ import annotations
 
 import time
 from threading import Lock
 from typing import Any, Dict, Mapping, Optional, Tuple
-
-from curl_cffi import requests
 
 from pymetal.locators import SITE_URL
 from pymetal.util import get_random_user_agent
@@ -21,7 +24,28 @@ _CacheKey = Tuple[str, str, Tuple[Tuple[str, str], ...]]
 
 
 class Client:
-    """Thin wrapper around curl_cffi with optional response-body cache."""
+    """Thin wrapper around an injected HTTP session with optional response cache.
+
+    Parameters
+    ----------
+    base_url:
+        Base URL all relative ``path`` arguments are joined against.
+    impersonate:
+        Browser fingerprint to pass to ``curl_cffi.requests.Session`` when
+        constructing a default session. Ignored when ``session`` is supplied.
+    cache_ttl:
+        Seconds before cached entries expire. ``0`` disables expiry.
+    cache_size:
+        Maximum number of cached responses. ``0`` disables caching entirely.
+    session:
+        Optional pre-built session. Must expose a ``get(url, params=, headers=)``
+        method returning an object with ``content``, ``text``, ``url`` and
+        ``status_code`` attributes (the curl_cffi/requests Response API).
+        When ``None`` (the default), a curl_cffi session is constructed if
+        ``curl_cffi`` is importable; otherwise this raises ``ImportError``.
+        Use :func:`pymetal.transport.default_client` to pick a transport
+        based on environment variables and availability.
+    """
 
     def __init__(
         self,
@@ -29,9 +53,14 @@ class Client:
         impersonate: str = "chrome123",
         cache_ttl: float = 300.0,
         cache_size: int = 512,
+        session: Any = None,
     ) -> None:
         self.base_url = base_url.rstrip("/") + "/"
-        self.session = requests.Session(impersonate=impersonate)
+        if session is None:
+            # Lazy import — curl_cffi is now an optional ``[stealth]`` extra.
+            from curl_cffi import requests as _curl_requests
+            session = _curl_requests.Session(impersonate=impersonate)
+        self.session = session
         self.cache_ttl = cache_ttl
         self.cache_size = cache_size
         self._cache: Dict[_CacheKey, Tuple[float, bytes, str]] = {}
@@ -110,7 +139,3 @@ class Response:
         self.text = text
         self.url = url
         self.from_cache = from_cache
-
-
-# Module-level default client — endpoints use this unless given another.
-default_client = Client()

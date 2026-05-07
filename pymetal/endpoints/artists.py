@@ -10,7 +10,8 @@ from pymetal.endpoints._common import (
     first,
     parse_html,
 )
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import URL_ARTIST
 from pymetal.models import Artist
 
@@ -21,7 +22,7 @@ _DIED_RE = re.compile(r"died\s+(.+)", re.IGNORECASE)
 
 def get_artist(artist_id: int, client: Optional[Client] = None) -> Artist:
     """Fetch an artist page and return an `Artist`."""
-    c = client or default_client
+    c = client or default_client()
     resp = c.get(URL_ARTIST.format(artist_id=artist_id))
     tree = parse_html(resp.content)
 

@@ -10,7 +10,8 @@ from __future__ import annotations
 from typing import Iterable, Iterator, List, Optional, Sequence, Union
 
 from pymetal.endpoints._common import ma_id_from_url
-from pymetal.http import Client, default_client
+from pymetal.http import Client
+from pymetal.transport import default_client
 from pymetal.locators import (
     BAND_STATUS_CODES,
     RELEASE_FORMAT_CODES,
@@ -134,7 +135,7 @@ def search_bands(
     `country` accepts an MA code ('PT') or a list of codes.
     `status` accepts names ('active', 'split-up') or MA codes (1..6).
     """
-    c = client or default_client
+    c = client or default_client()
     params: dict = {
         "bandName": band_name,
         "genre": genre,
@@ -200,7 +201,7 @@ def search_albums(
     client: Optional[Client] = None,
 ) -> Iterator[AlbumSearchHit]:
     """Search releases. Covers every field on the albums advanced-search form."""
-    c = client or default_client
+    c = client or default_client()
     params: dict = {
         "bandName": band_name,
         "releaseTitle": release_title,
@@ -286,7 +287,7 @@ def search_songs(
     `SongSearchHit`s carrying band_id, release_id and lyrics_id — none of
     which the legacy flat `Track` exposed.
     """
-    c = client or default_client
+    c = client or default_client()
     excluded = set(excluded_release_types or [])
     params: dict = {
         "bandName": band_name,

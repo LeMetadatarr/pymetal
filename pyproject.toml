@@ -11,14 +11,15 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "jarbasAi", email = "jarbasai@mailfence.com" }]
 requires-python = ">=3.10"
 dependencies = [
-    "curl_cffi",
     "lxml",
     "mediavocab>=0.1.0",
     "pydantic>=2",
     "random-user-agent",
+    "requests",
 ]
 
 [project.optional-dependencies]
+stealth = ["curl_cffi"]
 test = ["pytest"]
 
 [project.urls]

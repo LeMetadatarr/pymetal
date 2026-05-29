@@ -17,6 +17,9 @@ dependencies = [
     "random-user-agent",
 ]
 
+[project.optional-dependencies]
+antibot = ["unblock_requests"]
+
 [project.urls]
 Homepage = "https://github.com/TigreGotico/pymetal"
 Source = "https://github.com/TigreGotico/pymetal"

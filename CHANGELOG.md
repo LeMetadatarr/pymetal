@@ -1,20 +1,12 @@
 # Changelog
 
-## [1.0.1a1](https://github.com/TigreGotico/pymetal/tree/1.0.1a1) (2026-04-30)
+## [1.1.0a1](https://github.com/TigreGotico/pymetal/tree/1.1.0a1) (2026-05-29)
 
-[Full Changelog](https://github.com/TigreGotico/pymetal/compare/1.0.0a2...1.0.1a1)
-
-**Merged pull requests:**
-
-- fix: anchor lyrics-link id regex \(was capturing single char\) [\#4](https://github.com/TigreGotico/pymetal/pull/4) ([JarbasAl](https://github.com/JarbasAl))
-
-## [1.0.0a2](https://github.com/TigreGotico/pymetal/tree/1.0.0a2) (2026-04-30)
-
-[Full Changelog](https://github.com/TigreGotico/pymetal/compare/9ced39b0f875eee626675759ea3f0a0021a31750...1.0.0a2)
+[Full Changelog](https://github.com/TigreGotico/pymetal/compare/1.0.1...1.1.0a1)
 
 **Merged pull requests:**
 
-- Configure Renovate [\#1](https://github.com/TigreGotico/pymetal/pull/1) ([renovate[bot]](https://github.com/apps/renovate))
+- feat: route HTTP through unblock\_requests CloudflareSession \(soft-import\) [\#7](https://github.com/TigreGotico/pymetal/pull/7) ([JarbasAl](https://github.com/JarbasAl))
 
 
 

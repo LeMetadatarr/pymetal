@@ -31,7 +31,15 @@ class Client:
         cache_size: int = 512,
     ) -> None:
         self.base_url = base_url.rstrip("/") + "/"
-        self.session = requests.Session(impersonate=impersonate)
+        try:
+            from unblock_requests import CloudflareSession
+            self.session = CloudflareSession(
+                env_prefix="PYMETAL",
+                impersonate=impersonate,
+                wayback_fallback=True,
+            )
+        except Exception:
+            self.session = requests.Session(impersonate=impersonate)
         self.cache_ttl = cache_ttl
         self.cache_size = cache_size
         self._cache: Dict[_CacheKey, Tuple[float, bytes, str]] = {}

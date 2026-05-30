@@ -18,6 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+anon = ["anon_requests"]
 antibot = ["unblock_requests"]
 
 [project.urls]

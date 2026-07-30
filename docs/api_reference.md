@@ -4,7 +4,7 @@ Every public symbol is re-exported from the `pymetal` top-level package.
 
 ## Models
 
-All models are Pydantic v2; round-trip with `.model_dump_json()` /
+All models are Pydantic v2 and round-trip with `.model_dump_json()` and
 `Model.model_validate_json()`.
 
 ### Core entities
@@ -53,8 +53,8 @@ All models are Pydantic v2; round-trip with `.model_dump_json()` /
 
 #### `Song`
 
-`ma_id`, `title`, `length`, `lyrics_id`. Canonical song identity — survives
-across releases.
+`ma_id`, `title`, `length`, `lyrics_id`. This is the canonical song
+identity. It survives across releases.
 
 #### `Artist`
 
@@ -78,13 +78,13 @@ across releases.
 | `status` | `LineupStatus` | `current` / `past` / `last_known` / `live` / `guest_session` |
 | `date_from` / `date_to` | `str` | outer span; `None` end == "present" |
 
-A single artist may have several rows for the same band (multiple stints).
-Don't derive `current` from `date_to is None` — MA distinguishes
+A single artist can have several rows for the same band (multiple stints).
+Do not derive `current` from `date_to is None`. MA distinguishes
 `last_known` for inactive bands.
 
 #### `ReleaseLineup`
 
-`release_id`, `band_id` (Optional — None for staff), `artist_id`,
+`release_id`, `band_id` (Optional, `None` for staff), `artist_id`,
 `artist_name`, `role`, `section: CreditSection` (`band` / `guest` /
 `staff`), `credit_note`.
 
@@ -93,14 +93,15 @@ Don't derive `current` from `date_to is None` — MA distinguishes
 `release_id`, `song_id`, `band_id`, `track_no`, `disc_no`,
 `title_override`, `length`, `is_bonus`, `is_instrumental`.
 
-The join row that makes a song reusable across releases AND attributable
-per-band on splits.
+This is the join row. It makes a song reusable across releases and
+attributable per band on splits.
 
 ### Search-result models
 
-`BandSearchHit`, `AlbumSearchHit`, `SongSearchHit`. Carry the ids that
-the AJAX result rows expose (band_id, release_id, lyrics_id) — richer
-than the full detail models would be when only minimal data is needed.
+`BandSearchHit`, `AlbumSearchHit`, `SongSearchHit`. These carry the ids
+that the AJAX result rows expose (band_id, release_id, lyrics_id). They
+are lighter than the full detail models, for when only minimal data is
+needed.
 
 ### Enums
 
@@ -133,7 +134,7 @@ MA's broken default sort (raises `SQLSTATE[42S22]`) by sending
 `iSortCol_0=2&sSortDir_0=desc` (rating descending).
 
 `get_links(entity_id, entity_type='band') -> List[ExternalLink]`
-External links (Bandcamp, Spotify, official site, merch shops, ...)
+External links (Bandcamp, Spotify, official site, merch shops, and more)
 grouped by `section`. `entity_type` is `'band'` or `'label'`.
 
 ### Releases
@@ -149,7 +150,7 @@ All releases for a band (no tracks).
 Per-release credits, partitioned by `CreditSection` (band / guest / staff).
 
 `get_other_versions(release_id) -> List[Release]`
-Re-issues, re-masters, regional editions of a release.
+Re-issues, re-masters, and regional editions of a release.
 
 ### Artists
 
@@ -168,13 +169,13 @@ date, sub-labels, parent label, online-shopping flag, logo, audit.
 Returns `None` when MA reports `(lyrics not available)`.
 
 `get_lyrics(song_title="", band_name="", release_type=None) -> Iterator[str]`
-High-level helper — searches songs, then yields their lyrics.
+A high-level helper. It searches songs, then yields their lyrics.
 
 ### Browse (catalog walks)
 
 These hit MA's dedicated `browse/ajax-*` endpoints rather than the
-search index, so they return the full catalog for a slice (every band
-in a country / genre / letter) rather than paged search results.
+search index. They return the full catalog for a slice (every band
+in a country, genre, or letter) rather than paged search results.
 
 `browse_bands_by_country(code, *, paginate=True, page_size=500) -> Iterator[BandSearchHit]`
 Every band MA lists for a country (ISO 3166-1 alpha-2).
@@ -183,11 +184,11 @@ Every band MA lists for a country (ISO 3166-1 alpha-2).
 `slug` is one of MA's 23 coarse buckets (see `list_genre_slugs()`).
 
 `browse_bands_by_letter(letter, *, paginate=True, page_size=500) -> Iterator[BandSearchHit]`
-`letter` is `'A'`..`'Z'`, `'NBR'` (digits) or `'~'` (symbols/non-Latin).
+`letter` is `'A'`..`'Z'`, `'NBR'` (digits), or `'~'` (symbols/non-Latin).
 
 `browse_labels_by_country(code, *, paginate=True, page_size=500) -> Iterator[Label]`
 `browse_labels_by_letter(letter, *, paginate=True, page_size=500) -> Iterator[Label]`
-Lightweight `Label` rows — call `get_label(id)` for full detail.
+Lightweight `Label` rows. Call `get_label(id)` for full detail.
 
 `browse_reviews(year=None, month=None, *, paginate=True, page_size=500) -> Iterator[Review]`
 All reviews posted in a given month. Defaults to the current month.
@@ -307,3 +308,6 @@ Client(
 `get(path, params=None, use_cache=True) -> Response` and
 `get_json(path, params=None) -> Any`. The cache is in-process, keyed on
 (method, url, sorted-params).
+
+---
+[← Getting Started](getting_started.md) · [Home](../readme.md) · [Advanced Usage →](advanced_usage.md)

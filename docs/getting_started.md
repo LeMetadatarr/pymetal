@@ -10,7 +10,7 @@ Python 3.10+. Dependencies: `curl_cffi`, `lxml`, `pydantic>=2`, `random-user-age
 
 ## The facade
 
-`MetalArchives` wraps every endpoint and shares one `Client` (HTTP + cache):
+`MetalArchives` wraps every endpoint and shares one `Client` (HTTP and cache):
 
 ```python
 from pymetal import MetalArchives
@@ -29,10 +29,10 @@ Both forms accept a `client=` keyword for testing or running multiple isolated s
 
 ### 1. Search
 
-`search_bands`, `search_albums`, `search_songs` mirror the metal-archives advanced-search forms:
+`search_bands`, `search_albums`, and `search_songs` mirror the metal-archives advanced-search forms:
 
 ```python
-# Active Portuguese heavy metal bands formed 1980–1989
+# Active Portuguese heavy metal bands formed 1980-1989
 for b in ma.search_bands(
     country="PT",
     genre="Heavy",
@@ -52,12 +52,12 @@ for r in ma.search_albums(
 
 # Songs whose lyrics contain a phrase
 for s in ma.search_songs(lyrics="ace of spades"):
-    print(s.band_name, "—", s.title, f"(lyrics_id={s.lyrics_id})")
+    print(s.band_name, "-", s.title, f"(lyrics_id={s.lyrics_id})")
 ```
 
 `paginate=True` walks every page until `iTotalRecords` is exhausted.
 
-### 2. Band + lineup
+### 2. Band and lineup
 
 ```python
 band = ma.get_band(14)  # Carcass
@@ -65,7 +65,7 @@ print(band.country, band.formed_in, band.genres, band.current_label_name)
 print(band.audit.added_on, band.audit.last_modified_on)
 
 for m in ma.get_lineup(14):
-    print(m.status, m.artist_name, m.role, m.date_from, "→", m.date_to)
+    print(m.status, m.artist_name, m.role, m.date_from, "->", m.date_to)
 ```
 
 ### 3. Release with tracks
@@ -79,7 +79,7 @@ for app in appearances:
     print(app.track_no, app.song_id, app.band_id, app.length)
 ```
 
-For a split release, `appearances` will have `band_id`s for *each* band on the release.
+For a split release, `appearances` holds a `band_id` for each band on the release.
 
 ### 4. Per-release credits
 
@@ -90,7 +90,7 @@ for c in ma.get_release_lineup(451600):
         print("staff:", c.artist_name, c.role)
 ```
 
-### 5. Re-issues / other versions
+### 5. Re-issues and other versions
 
 ```python
 for v in ma.get_other_versions(451600):
@@ -105,5 +105,8 @@ text = ma.get_lyrics_by_song_id(172090)
 
 ## Where next
 
-- [API Reference](api_reference.md) — every model and function.
-- [Advanced Usage](advanced_usage.md) — splits, lineup-at-time, caching, full-corpus crawls.
+- [API Reference](api_reference.md): every model and function.
+- [Advanced Usage](advanced_usage.md): splits, lineup-at-time, caching, full-corpus crawls.
+
+---
+[Home](../readme.md) · [API Reference →](api_reference.md)

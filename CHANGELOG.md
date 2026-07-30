@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0a2](https://github.com/TigreGotico/pymetal/tree/1.1.0a2) (2026-07-30)
+
+[Full Changelog](https://github.com/TigreGotico/pymetal/compare/1.1.0a1...1.1.0a2)
+
+**Merged pull requests:**
+
+- docs: rewrite README in Simplified Technical English [\#9](https://github.com/TigreGotico/pymetal/pull/9) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.1.0a1](https://github.com/TigreGotico/pymetal/tree/1.1.0a1) (2026-05-29)
 
 [Full Changelog](https://github.com/TigreGotico/pymetal/compare/1.0.1...1.1.0a1)

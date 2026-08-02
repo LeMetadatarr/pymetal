@@ -21,8 +21,8 @@ dependencies = [
 antibot = ["unblock_requests"]
 
 [project.urls]
-Homepage = "https://github.com/TigreGotico/pymetal"
-Source = "https://github.com/TigreGotico/pymetal"
+Homepage = "https://github.com/LeMetadatarr/pymetal"
+Source = "https://github.com/LeMetadatarr/pymetal"
 
 [tool.setuptools.packages.find]
 exclude = ["test*", "examples*"]

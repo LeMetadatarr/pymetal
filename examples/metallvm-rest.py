@@ -68,7 +68,7 @@ app = FastAPI(
     version=__version__,
     description=(
         "Every route is a thin wrapper around a `pymetal.endpoints` "
-        "function. See https://github.com/TigreGotico/pymetal."
+        "function. See https://github.com/LeMetadatarr/pymetal."
     ),
 )
 ma = MetalArchives()

@@ -10,10 +10,13 @@ pymetal/
   locators.py             # URLs, regexes, CSS/XPath selectors, code tables
   models.py               # Pydantic v2 models + enums
   endpoints/
+    __init__.py            # re-exports of every endpoint function
     _common.py            # parsing helpers (dl_pairs, audit, ma_id_from_url)
     bands.py               # get_band, get_lineup
     releases.py            # get_release, get_discography, get_release_lineup, get_other_versions
     artists.py              # get_artist
+    labels.py                # get_label
+    browse.py                # browse_bands_by_*, browse_labels_by_*, get_upcoming_releases, get_rip_artists, list_countries, list_genre_slugs, browse_reviews, get_band_reviews
     search.py               # search_bands, search_albums, search_songs
     lyrics.py                # get_lyrics_by_song_id, get_lyrics
 test/
@@ -26,6 +29,7 @@ test/
   test_parsers_fixtures.py  # end-to-end parsers against captured fixtures
   test_http.py             # Client cache behavior
   test_archives.py         # facade-level
+  license_tests.py         # license-header check
 ```
 
 ## Design rules
@@ -100,8 +104,8 @@ partitioning, audit-trail blocks.
 
 ## Releasing
 
-Until 1.0, expect breaking changes. Bump `setup.py:version` and add a
-`CHANGELOG.md` entry per release.
+Until 1.0, expect breaking changes. Bump the version block in
+`pymetal/version.py` and add a `CHANGELOG.md` entry per release.
 
 ---
 [← Advanced Usage](advanced_usage.md) · [Home](../readme.md)

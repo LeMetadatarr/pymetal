@@ -104,6 +104,13 @@ All functions return Pydantic v2 models. `.model_dump_json()` round-trips on eve
 - [Advanced Usage](docs/advanced_usage.md): splits, lineups over time, pagination, caching, lyrics download.
 - [Developer Guide](docs/developer_guide.md): adding endpoints, capturing fixtures, running tests.
 
+## Related projects
+
+- [metadatarr](https://github.com/LeMetadatarr/metadatarr): metadata aggregation across the `pymetal` family of clients.
+- [pymusicbrainz](https://github.com/LeMetadatarr/pymusicbrainz): a Python client for the MusicBrainz database.
+- [pydiscogs](https://github.com/LeMetadatarr/pydiscogs): a Python client for Discogs.
+- [pyrateyourmusic](https://github.com/LeMetadatarr/pyrateyourmusic): a Python client for Rate Your Music.
+
 ## License
 
 Apache 2.0

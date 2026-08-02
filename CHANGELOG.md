@@ -1,20 +1,28 @@
 # Changelog
 
-## [1.1.0a2](https://github.com/TigreGotico/pymetal/tree/1.1.0a2) (2026-07-30)
+## [1.1.0a3](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a3) (2026-08-02)
 
-[Full Changelog](https://github.com/TigreGotico/pymetal/compare/1.1.0a1...1.1.0a2)
-
-**Merged pull requests:**
-
-- docs: rewrite README in Simplified Technical English [\#9](https://github.com/TigreGotico/pymetal/pull/9) ([JarbasAl](https://github.com/JarbasAl))
-
-## [1.1.0a1](https://github.com/TigreGotico/pymetal/tree/1.1.0a1) (2026-05-29)
-
-[Full Changelog](https://github.com/TigreGotico/pymetal/compare/1.0.1...1.1.0a1)
+[Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a2...1.1.0a3)
 
 **Merged pull requests:**
 
-- feat: route HTTP through unblock\_requests CloudflareSession \(soft-import\) [\#7](https://github.com/TigreGotico/pymetal/pull/7) ([JarbasAl](https://github.com/JarbasAl))
+- docs: QA pass — accuracy, org-move URLs, related projects [\#11](https://github.com/LeMetadatarr/pymetal/pull/11) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.1.0a2](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a2) (2026-07-30)
+
+[Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a1...1.1.0a2)
+
+**Merged pull requests:**
+
+- docs: rewrite README in Simplified Technical English [\#9](https://github.com/LeMetadatarr/pymetal/pull/9) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.1.0a1](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a1) (2026-05-29)
+
+[Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.0.1...1.1.0a1)
+
+**Merged pull requests:**
+
+- feat: route HTTP through unblock\_requests CloudflareSession \(soft-import\) [\#7](https://github.com/LeMetadatarr/pymetal/pull/7) ([JarbasAl](https://github.com/JarbasAl))
 
 
 

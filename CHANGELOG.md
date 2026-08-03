@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0a5](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a5) (2026-08-03)
+
+[Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a4...1.1.0a5)
+
+**Merged pull requests:**
+
+- deep: bugs, real-fixture tests, docs/examples [\#13](https://github.com/LeMetadatarr/pymetal/pull/13) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.1.0a4](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a4) (2026-08-03)
 
 [Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a3...1.1.0a4)

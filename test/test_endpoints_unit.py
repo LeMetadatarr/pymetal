@@ -145,3 +145,25 @@ def test_extract_audit_parses_known_labels():
     assert a.modified_by == "bob"
     assert a.added_on == "2010-01-01 00:00:00"
     assert a.last_modified_on == "2026-04-29 12:00:00"
+
+
+def test_normalise_genre_reduces_simple_coarse_genres():
+    from pymetal.archives import _normalise_genre
+    from pymetal.locators import GENRES
+
+    assert _normalise_genre("Death Metal") == "death"
+    assert _normalise_genre("Black Metal") == "black"
+    assert _normalise_genre("Thrash Metal") == "thrash"
+    assert _normalise_genre("Death Metal") in GENRES
+
+
+def test_normalise_genre_does_not_reduce_compound_genres():
+    """Real MA band pages carry compound genre strings ('Melodic Death
+    Metal', 'Power/Melodic Death Metal') that `_normalise_genre` cannot
+    reduce to a single `GENRES` bucket — callers must reject these rather
+    than silently treating them as unfiltered (see `random_band`)."""
+    from pymetal.archives import _normalise_genre
+    from pymetal.locators import GENRES
+
+    assert _normalise_genre("Melodic Death Metal") not in GENRES
+    assert _normalise_genre("Power/Melodic Death Metal") not in GENRES

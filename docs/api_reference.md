@@ -290,6 +290,13 @@ ma = MetalArchives(client=Client(cache_ttl=60))   # custom client
 | `get_lyrics(song_title, band_name, release_type)` | `Iterator[str]` |
 | `random_band(genre=None)` | `Band` |
 
+`random_band(genre=...)` accepts one of `pymetal.locators.GENRES` coarse
+buckets ('death', 'black', 'thrash', ...), case-insensitive and tolerant of
+a trailing "Metal" ('Death Metal' -> 'death'). It raises `ValueError` for
+anything else — including the compound genre strings MA shows on band
+pages ('Melodic Death Metal', 'Power/Melodic Death Metal') — rather than
+silently returning an unfiltered random band.
+
 ---
 
 ## `Client`

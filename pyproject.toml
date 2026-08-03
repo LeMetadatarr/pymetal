@@ -19,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 antibot = ["unblock_requests"]
+test = ["pytest", "pytest-cov", "unblock_requests"]
 
 [project.urls]
 Homepage = "https://github.com/LeMetadatarr/pymetal"

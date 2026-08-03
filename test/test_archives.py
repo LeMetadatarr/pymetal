@@ -89,6 +89,70 @@ class TestMetalArchivesFacade(unittest.TestCase):
         self.assertGreater(len(rows), 0)
 
 
+class _RandomBandFakeClient:
+    """Serves a fixed `band/random` redirect (via `resp.url`) plus the
+    matching band detail fixture, so `random_band()` can be exercised
+    without hitting the network."""
+
+    def __init__(self, band_id: int, band_fixture: str) -> None:
+        self.band_id = band_id
+        self.band_fixture = band_fixture
+        self.calls = 0
+
+    def get(self, path, params=None, use_cache=True):
+        self.calls += 1
+        if path == "band/random":
+            url = f"https://www.metal-archives.com/bands/X/{self.band_id}"
+            return _FakeResponse(b"")._with_url(url)
+        with open(os.path.join(HTML_FIXTURES, self.band_fixture), "rb") as f:
+            return _FakeResponse(f.read())
+
+    def get_json(self, path, params=None):
+        raise AssertionError("random_band should not need get_json")
+
+
+def _with_url(self, url):
+    self.url = url
+    return self
+
+
+_FakeResponse._with_url = _with_url
+
+
+class TestRandomBand(unittest.TestCase):
+    def test_random_band_matches_requested_genre(self):
+        """Mayhem (id 67) is tagged 'Black Metal' — genre='black' must match."""
+        m = MetalArchives(client=_RandomBandFakeClient(67, "band_mayhem.html"))
+        b = m.random_band(genre="black", max_attempts=3, sleep_between=0)
+        self.assertEqual(b.ma_id, 67)
+        self.assertEqual(b.name, "Mayhem")
+
+    def test_random_band_rerolls_when_genre_does_not_match(self):
+        """Mayhem is Black Metal, not Death Metal — 'death' must exhaust
+        attempts (re-rolling the same non-matching band each time) and
+        fall back to the last band seen rather than hang."""
+        m = MetalArchives(client=_RandomBandFakeClient(67, "band_mayhem.html"))
+        b = m.random_band(genre="death", max_attempts=2, sleep_between=0)
+        # No match found within max_attempts -> falls back to last_band.
+        self.assertEqual(b.ma_id, 67)
+
+    def test_random_band_unsupported_genre_raises(self):
+        """Regression: previously an unrecognised/compound genre (e.g. a
+        real MA compound tag like 'Melodic Death Metal') silently disabled
+        the filter and matched *any* band instead of raising. Verified live
+        against metal-archives.com on 2026-08-03: random bands routinely
+        carry compound genre strings like 'Power/Melodic Death Metal' that
+        `_normalise_genre` cannot reduce to a `GENRES` bucket."""
+        m = MetalArchives(client=_RandomBandFakeClient(67, "band_mayhem.html"))
+        with self.assertRaises(ValueError):
+            m.random_band(genre="Melodic Death Metal", max_attempts=3, sleep_between=0)
+
+    def test_random_band_no_genre_returns_first_hit(self):
+        m = MetalArchives(client=_RandomBandFakeClient(67, "band_mayhem.html"))
+        b = m.random_band(max_attempts=3, sleep_between=0)
+        self.assertEqual(b.ma_id, 67)
+
+
 class TestLegacyJSONFixtures(unittest.TestCase):
     """Sanity-check that the historical pre-parsed JSON fixtures still load."""
 

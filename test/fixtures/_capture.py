@@ -104,6 +104,8 @@ def main() -> None:
             None,
         ),
         ("lyrics_5060.html", URL_LYRICS + "5060", None),
+        # Non-existent song id — exercises the "(lyrics not available)" path.
+        ("lyrics_not_available.html", URL_LYRICS + "999999999", None),
     ]
     for fname, path, params in targets:
         r = c.get(path, params=params, use_cache=False)

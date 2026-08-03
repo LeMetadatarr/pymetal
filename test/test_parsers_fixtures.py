@@ -531,6 +531,16 @@ def test_get_lyrics_real_content(fake_client):
     assert len(text) > 100
 
 
+def test_get_lyrics_not_available_returns_none(fake_client):
+    """MA reports missing lyrics as '<em>(lyrics not available)</em>' —
+    captured from a non-existent song id (999999999)."""
+    c = fake_client(
+        {"release/ajax-view-lyrics/id/999999999": "lyrics_not_available.html"}
+    )
+    text = get_lyrics_by_song_id(999999999, client=c)
+    assert text is None
+
+
 # ---------------------------------------------------------------------------
 # Edge-case bands: split-up status + last_known lineup
 # ---------------------------------------------------------------------------

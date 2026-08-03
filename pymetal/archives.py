@@ -70,6 +70,12 @@ class MetalArchives:
     ) -> Band:
         """Roll a random band; if `genre` is given, re-roll until a match.
 
+        `genre` must be one of `pymetal.locators.GENRES` coarse buckets
+        (case-insensitive, "Metal"/spacing-insensitive — e.g. "Death Metal"
+        normalises to "death"). Compound genres MA renders on band pages
+        (e.g. "Melodic Death Metal", "Power/Melodic Death Metal") are *not*
+        valid inputs here; pass the coarse bucket instead ("death", "power").
+
         Re-rolls also trigger when the parser returns an empty `Band`
         (typical when MA rate-limits and serves a stripped error page).
         Sleeps `sleep_between` seconds between attempts so we don't
@@ -78,8 +84,14 @@ class MetalArchives:
         import time
 
         target = _normalise_genre(genre) if genre else None
-        if target and target not in GENRES:
-            target = None  # caller asked for an unsupported coarse genre
+        if genre and (not target or target not in GENRES):
+            # Previously this silently dropped the filter and matched any
+            # band, so a typo'd or compound genre looked like it worked but
+            # actually returned unfiltered results. Fail loudly instead.
+            raise ValueError(
+                f"genre {genre!r} is not one of pymetal.locators.GENRES "
+                f"coarse buckets: {sorted(GENRES)}"
+            )
 
         last_band: Optional[Band] = None
         for attempt in range(max_attempts):

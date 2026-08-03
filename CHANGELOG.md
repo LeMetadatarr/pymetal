@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0a4](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a4) (2026-08-03)
+
+[Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a3...1.1.0a4)
+
+**Merged pull requests:**
+
+- ci: grant conventional-label workflow write permissions [\#12](https://github.com/LeMetadatarr/pymetal/pull/12) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.1.0a3](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a3) (2026-08-02)
 
 [Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a2...1.1.0a3)

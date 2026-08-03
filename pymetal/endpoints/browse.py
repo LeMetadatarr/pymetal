@@ -43,7 +43,6 @@ _TEXT_RE = re.compile(r">([^<]*)</a>")
 
 
 def _parse_anchor(html_str: str) -> tuple[Optional[str], str]:
-    href = (_HREF_RE.search(html_str) or [None, None])[1] if _HREF_RE.search(html_str) else None
     m = _HREF_RE.search(html_str)
     href = m.group(1) if m else None
     m2 = _TEXT_RE.search(html_str)

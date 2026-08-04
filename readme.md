@@ -104,6 +104,22 @@ All functions return Pydantic v2 models. `.model_dump_json()` round-trips on eve
 - [Advanced Usage](docs/advanced_usage.md): splits, lineups over time, pagination, caching, lyrics download.
 - [Developer Guide](docs/developer_guide.md): adding endpoints, capturing fixtures, running tests.
 
+## Bulk harvesting (optional)
+
+`pymetal` itself is a query client — it fetches one band, one release, one page at
+a time. For a full catalogue dump (every band Metal Archives lists), install the
+`harvest` extra, which adds a resumable bulk scraper built on
+[harvestkit](https://github.com/LeMetadatarr/harvestkit):
+
+```bash
+pip install pymetal[harvest]
+pymetal-harvest                 # or: python -m harvestkit metal_archives
+```
+
+This walks the public browse-bands endpoint end to end and writes a JSONL band
+dataset (`ma_id`, `name`, `url`, `country`, `genre`, `status`) with resume-on-restart
+checkpointing. It is not part of the base install.
+
 ## Related projects
 
 - [metadatarr](https://github.com/LeMetadatarr/metadatarr): metadata aggregation across the `pymetal` family of clients.

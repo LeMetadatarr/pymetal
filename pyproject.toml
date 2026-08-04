@@ -20,6 +20,10 @@ dependencies = [
 [project.optional-dependencies]
 antibot = ["unblock_requests"]
 test = ["pytest", "pytest-cov", "unblock_requests"]
+harvest = ["harvestkit>=0.1.0a1", "unblock_requests"]
+
+[project.scripts]
+pymetal-harvest = "pymetal.harvest:main"
 
 [project.urls]
 Homepage = "https://github.com/LeMetadatarr/pymetal"

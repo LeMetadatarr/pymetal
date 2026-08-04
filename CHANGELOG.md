@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0a1](https://github.com/LeMetadatarr/pymetal/tree/1.2.0a1) (2026-08-04)
+
+[Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a5...1.2.0a1)
+
+**Merged pull requests:**
+
+- feat: bundle metal\_archives bulk harvester \(\[harvest\] extra, on harvestkit\) [\#14](https://github.com/LeMetadatarr/pymetal/pull/14) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.1.0a5](https://github.com/LeMetadatarr/pymetal/tree/1.1.0a5) (2026-08-03)
 
 [Full Changelog](https://github.com/LeMetadatarr/pymetal/compare/1.1.0a4...1.1.0a5)
